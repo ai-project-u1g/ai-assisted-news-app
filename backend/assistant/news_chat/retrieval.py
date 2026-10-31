@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 from bson import ObjectId
+from news.editorial import has_confirmation_basis
 from news.models import ConfidenceLevel, VerificationStatus
 
 from .intent import ClassifiedQuery, normalize_text
@@ -20,8 +21,6 @@ RECENT_NEWS_WINDOW = 200
 LISTING_LIMIT = 5
 ELABORATION_LIMIT = 3
 CONTENT_MAX_CHARS = 4000
-
-STRONG_SOURCE_TYPES = {"official", "primary_source"}
 
 VERIFICATION_LABELS = {
     VerificationStatus.confirmed.value: "Confirmada",
@@ -40,6 +39,8 @@ NEWS_PROJECTION = {
     "geographicScope": 1,
     "verification": 1,
     "sources": 1,
+    "aiAssistance": 1,
+    "image": 1,
     "estimatedReadingMinutes": 1,
     "publishedAt": 1,
 }
@@ -217,6 +218,7 @@ def compute_confidence(cited: list[dict[str, Any]]) -> Confidence:
     if unconfirmed:
         details = "; ".join(
             f"«{document.get('title')}» ({verification_label(document).lower()})"
+            + (f": {document['verification']['notes']}" if (document.get("verification") or {}).get("notes") else "")
             for document in unconfirmed
         )
         return Confidence(
@@ -224,17 +226,11 @@ def compute_confidence(cited: list[dict[str, Any]]) -> Confidence:
             f"Hay noticias citadas que no están confirmadas: {details}.",
         )
 
-    def well_sourced(document: dict[str, Any]) -> bool:
-        sources = document.get("sources") or []
-        return len(sources) >= 2 or any(
-            _plain(source.get("sourceType")) in STRONG_SOURCE_TYPES for source in sources
-        )
-
-    if all(well_sourced(document) for document in cited):
+    if all(has_confirmation_basis(document.get("sources") or []) for document in cited):
         return Confidence(ConfidenceLevel.high, None)
     return Confidence(
         ConfidenceLevel.medium,
-        "Algunas noticias citadas se apoyan en una sola fuente secundaria o no declaran fuentes.",
+        "Algunas noticias citadas no tienen respaldo primario ni fuentes de sitios distintos; revisa su procedencia.",
     )
 
 
@@ -318,8 +314,16 @@ def news_context(
                 "unresolvedLocationIds": [str(ref) for ref in location_ids if ref not in locations],
             },
             "verificationStatus": verification_status(document),
+            "verificationNotes": (document.get("verification") or {}).get("notes"),
+            "aiAssistance": document.get("aiAssistance") or {},
+            "image": {key: _plain(value) if key == "type" else value
+                      for key, value in (document.get("image") or {}).items()
+                      if key in {"type", "alt", "aiDisclosure", "credit", "rights"}},
             "sources": [
-                {"name": source.get("name"), "sourceType": _plain(source.get("sourceType"))}
+                {"name": source.get("name"), "url": source.get("url"),
+                 "sourceType": _plain(source.get("sourceType")), "supports": source.get("supports"),
+                 "publishedAt": _format_date(source.get("publishedAt")),
+                 "accessedAt": _format_date(source.get("accessedAt"))}
                 for source in document.get("sources") or []
             ],
             "publishedAt": _format_date(document.get("publishedAt")),

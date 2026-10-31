@@ -90,8 +90,11 @@ def test_create_news_document_inserts_news_author_and_audit_log() -> None:
         topic="actualidad",
         keywords=["manual"],
         locationId=str(CATALOG_LOCATION_IDS["GT"]),
-        sourceName="Fuente local",
-        sourceUrl="https://example.com/noticia",
+        status="published",
+        verificationStatus="developing",
+        humanReviewed=True,
+        verificationNotes="El anuncio sigue en desarrollo; contrastado con la fuente local.",
+        sources=[{"name": "Fuente local", "url": "https://example.com/noticia", "sourceType": "media", "supports": "El anuncio local."}],
     )
     actor = {"_id": ObjectId(), "firebaseUid": "firebase-admin", "role": "admin"}
     db["users"].insert_one(actor)

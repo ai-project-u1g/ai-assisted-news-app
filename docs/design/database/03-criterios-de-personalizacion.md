@@ -136,3 +136,23 @@ Requisito del proyecto sobre la composición del feed:
   y los intereses inferidos no alteran ese orden de diversidad.
 - Las posiciones 1–3, que se muestran como principal y secundarias, respetan el orden compuesto por
   el servidor. La diversidad no elimina noticias locales pertinentes ni cambia sus datos.
+
+## Panorama territorial y explicación visible
+
+- `GET /coverage` consulta todos los documentos `published`, independientemente del límite de
+  50 del feed y de los temas declarados/inferidos. Devuelve la publicación más reciente para
+  cada uno de tres ámbitos, con el mismo desempate por identificador:
+  - local/regional: alcance `city` o `region` que referencia exactamente la ubicación elegida;
+  - nacional: alcance `country` con ubicación del mismo `countryCode` que la selección;
+  - internacional: alcance `international`, sin coincidencia local obligatoria.
+- Se muestran ámbitos sin contenido como vacíos, sin inventar publicaciones. Elegir un país no
+  equivale a elegir ciudad/región. El catálogo actual contiene países; no se simula cobertura local
+  ni internacional real por el mero hecho de que el modelo permita esos niveles.
+- El panorama permanece visible en Inicio aunque se busque un tema. No cambia el ranking ni
+  elimina los avisos de verificación; una apertura desde él registra posición de feed nula.
+- La explicación expandible del feed expone pesos, desempates, reservas y límites. La API añade
+  `feedScore` y `feedComponents` como metadatos calculados de respuesta; no se guardan en MongoDB.
+  El detalle permite inspeccionarlos cuando la noticia proviene del feed.
+- Actualidad, cobertura y afinidad reducen el riesgo de burbuja; no son una declaración de
+  importancia pública. No existe detector de emergencias ni garantía de cobertura exhaustiva.
+  La evaluación editorial de los hechos sigue siendo humana y separada de la prominencia.

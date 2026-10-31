@@ -6,28 +6,31 @@ import os
 import re
 import unicodedata
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from typing import Annotated, Any
 
 from bson import ObjectId
 from fastapi import Depends, FastAPI, Header, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from pymongo.errors import DuplicateKeyError, PyMongoError
 
 from .config import NewsDatabaseConfigurationError, get_news_settings
 from .database import NewsDatabaseError, get_news_client
+from .editorial import validate_publication
 from .firebase_auth import (
     FirebaseAuthenticationError,
     FirebaseConfigurationError,
     FirebaseIdentity,
     verify_firebase_bearer,
 )
+from .image_library import image_candidates
+from .interactions import record_interaction
 from .models import (
     AuditAction,
-    InteractionType,
     ImageType,
+    InteractionType,
     LocationLevel,
     NewsStatus,
     SourceType,
@@ -44,8 +47,7 @@ from .models.news import (
     Verification,
 )
 from .models.reading_time import compute_reading_time
-from .interactions import record_interaction
-from .personalization import compose_feed, rank_news
+from .personalization import compose_feed, rank_news, select_coverage
 from .topics import TOPICS, normalize_topic
 from .user_accounts import UserAccountError, ensure_news_user
 
@@ -75,6 +77,14 @@ class GeographicScopeResponse(BaseModel):
     locationIds: list[str]
 
 
+class ImageLibraryCandidateResponse(BaseModel):
+    id: str
+    title: str
+    topics: list[str]
+    sourceUrl: str
+    image: Image
+
+
 class VerificationResponse(BaseModel):
     status: VerificationStatus
     reviewedBy: str | None = None
@@ -100,6 +110,8 @@ class NewsArticleResponse(BaseModel):
     sources: list[Source] = Field(default_factory=list)
     aiAssistance: AiAssistance = Field(default_factory=AiAssistance)
     feedReason: str | None = None
+    feedScore: float | None = None
+    feedComponents: dict[str, float] | None = None
 
 
 class HealthResponse(BaseModel):
@@ -179,6 +191,13 @@ class InteractionResponse(BaseModel):
     recordedNow: bool
 
 
+class AdminSourceRequest(Source):
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    name: str = Field(min_length=1)
+    accessedAt: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+
 class AdminNewsCreateRequest(BaseModel):
     title: str = Field(min_length=1, max_length=240)
     slug: str = Field(default="", max_length=160)
@@ -187,8 +206,13 @@ class AdminNewsCreateRequest(BaseModel):
     topic: str = Field(min_length=1)
     keywords: list[str] = Field(default_factory=list)
     locationId: str = Field(min_length=24, max_length=24)
-    status: NewsStatus = NewsStatus.published
-    verificationStatus: VerificationStatus = VerificationStatus.confirmed
+    status: NewsStatus = NewsStatus.draft
+    verificationStatus: VerificationStatus = VerificationStatus.developing
+    verificationNotes: str | None = None
+    humanReviewed: bool = False
+    summaryGenerated: bool = False
+    topicsGenerated: bool = False
+    sources: list[AdminSourceRequest] = Field(default_factory=list, max_length=10)
     sourceName: str | None = None
     sourceUrl: str | None = None
     sourceType: SourceType = SourceType.other
@@ -196,6 +220,8 @@ class AdminNewsCreateRequest(BaseModel):
     imageAlt: str | None = None
     imageCredit: str | None = None
     imageRights: str | None = None
+    imageType: ImageType = ImageType.none
+    imageAiDisclosure: str | None = None
 
     @field_validator(
         "title",
@@ -210,6 +236,8 @@ class AdminNewsCreateRequest(BaseModel):
         "imageAlt",
         "imageCredit",
         "imageRights",
+        "verificationNotes",
+        "imageAiDisclosure",
         mode="before",
     )
     @classmethod
@@ -233,6 +261,18 @@ class AdminNewsCreateRequest(BaseModel):
         has_source_url = bool(self.sourceUrl)
         if has_source_name != has_source_url:
             raise ValueError("sourceName y sourceUrl deben enviarse juntos.")
+        if self.sources and has_source_name:
+            raise ValueError("Usa sources o la fuente individual, no ambos formatos.")
+        # Validate the same image/source types that will be persisted, even for drafts.
+        if has_source_name:
+            Source(name=self.sourceName, url=self.sourceUrl, sourceType=self.sourceType,
+                   accessedAt=datetime.now(UTC))
+        if self.imageUrl and self.imageType == ImageType.none:
+            raise ValueError("Clasifica la imagen: fotografía, ilustración, generada o alterada con IA.")
+        if not self.imageUrl and self.imageType != ImageType.none:
+            raise ValueError("Agrega la URL de la imagen o selecciona sin imagen.")
+        _image_from_request(self)
+        validate_publication(self)
         return self
 
 
@@ -268,7 +308,7 @@ def _category_from_topics(topics: list[Any]) -> str:
 def _image_from_document(document: dict[str, Any]) -> ArticleImageResponse:
     image = document.get("image") or {}
     title = str(document.get("title") or "noticia")
-    credit = image.get("credit") or "Imagen ilustrativa pendiente"
+    credit = image.get("credit") or "Crédito no declarado"
     return ArticleImageResponse(
         src=image.get("url"),
         type=image.get("type") or ImageType.none,
@@ -279,7 +319,7 @@ def _image_from_document(document: dict[str, Any]) -> ArticleImageResponse:
         credit=credit,
         sourceUrl="",
         license=image.get("rights")
-        or "Placeholder local; requiere reemplazo por foto con licencia verificada.",
+        or "Derechos de uso no declarados.",
     )
 
 
@@ -437,6 +477,8 @@ def _user_profile_response(database, user: dict[str, Any]) -> UserProfileRespons
 def _source_from_request(
     payload: AdminNewsCreateRequest, now: datetime
 ) -> list[Source]:
+    if payload.sources:
+        return [Source.model_validate(source.model_dump()) for source in payload.sources]
     if not payload.sourceName or not payload.sourceUrl:
         return []
     return [
@@ -464,10 +506,10 @@ def _image_from_request(payload: AdminNewsCreateRequest) -> Image:
     return Image(
         url=payload.imageUrl,
         alt=payload.imageAlt or payload.title,
-        type=ImageType.photograph,
+        type=payload.imageType,
         credit=payload.imageCredit,
         rights=payload.imageRights,
-        aiDisclosure=None,
+        aiDisclosure=payload.imageAiDisclosure,
     )
 
 
@@ -521,13 +563,18 @@ def _create_news_document(
         ),
         verification=Verification(
             status=payload.verificationStatus,
-            reviewedBy=author_id,
-            reviewedAt=now,
-            notes="Creada desde el panel administrativo autenticado con Firebase.",
+            reviewedBy=author_id if payload.humanReviewed else None,
+            reviewedAt=now if payload.humanReviewed else None,
+            notes=payload.verificationNotes,
         ),
         sources=_source_from_request(payload, now),
         image=_image_from_request(payload),
-        aiAssistance=AiAssistance(humanReviewed=True),
+        aiAssistance=AiAssistance(
+            humanReviewed=payload.humanReviewed,
+            summaryGenerated=payload.summaryGenerated,
+            topicsGenerated=payload.topicsGenerated,
+            imageGenerated=payload.imageType == ImageType.ai_generated,
+        ),
         wordCount=word_count,
         estimatedReadingMinutes=reading_minutes,
         publishedAt=published_at,
@@ -546,7 +593,9 @@ def _create_news_document(
         actorId=author_id,
         action=AuditAction.news_created,
         entityId=document["_id"],
-        details={"slug": slug, "status": payload.status.value},
+        details={"slug": slug, "status": payload.status.value,
+                 "verificationStatus": payload.verificationStatus.value,
+                 "humanReviewed": payload.humanReviewed},
         createdAt=now,
     )
     database["auditLogs"].insert_one(audit.model_dump_mongo())
@@ -609,7 +658,9 @@ def create_app() -> FastAPI:
             composed = compose_feed(ranked, user, limit=50)
             return [
                 document_to_article(database, item["document"]).model_copy(
-                    update={"feedReason": item["reason"]}
+                    update={"feedReason": item["reason"],
+                            "feedScore": round(item["score"], 2),
+                            "feedComponents": {key: round(value, 2) for key, value in item["components"].items()}}
                 )
                 for item in composed
             ]
@@ -635,6 +686,21 @@ def create_app() -> FastAPI:
                 status_code=503,
                 detail="No fue posible leer ubicaciones desde MongoDB.",
             ) from error
+
+    @application.get("/coverage", response_model=dict[str, NewsArticleResponse | None])
+    async def coverage(request: Request, user: OptionalAuthenticatedUser):
+        settings = request.app.state.news_settings
+        database = request.app.state.news_client[settings.mongodb_database]
+        try:
+            selected = select_coverage(
+                list(database["news"].find({"status": "published"})),
+                user,
+                list(database["locations"].find({})),
+            )
+            return {key: document_to_article(database, document) if document else None
+                    for key, document in selected.items()}
+        except PyMongoError as error:
+            raise HTTPException(status_code=503, detail="No fue posible cargar el panorama territorial.") from error
 
     @application.get("/news/{slug}", response_model=NewsArticleResponse)
     async def news_detail(slug: str, request: Request) -> NewsArticleResponse:
@@ -764,6 +830,15 @@ def create_app() -> FastAPI:
             feedPosition=interaction["context"].get("feedPosition"),
             recordedNow=created,
         )
+
+    @application.get("/admin/image-library", response_model=list[ImageLibraryCandidateResponse])
+    async def admin_image_library(user: AuthenticatedUser, topic: str | None = None):
+        if user.get("role") != UserRole.admin:
+            raise HTTPException(status_code=403, detail="Se requiere rol administrador.")
+        try:
+            return image_candidates(topic)
+        except ValueError as error:
+            raise HTTPException(status_code=400, detail="La categoría de imagen no es válida.") from error
 
     @application.post(
         "/admin/news", response_model=NewsArticleResponse, status_code=201

@@ -3,6 +3,7 @@ import { ImageOff } from "lucide-react-native";
 
 import { colors, fonts, radii, spacing } from "../theme";
 import type { ArticleImage as ArticleImageType } from "../types";
+import { imageLabel } from "../features/news/editorialTransparency";
 
 type Props = {
   image: ArticleImageType;
@@ -12,12 +13,15 @@ type Props = {
 export function ArticleImage({ image, size = "standard" }: Props) {
   if (image.src) {
     return (
-      <Image
-        source={{ uri: image.src }}
-        accessibilityLabel={image.alt}
-        resizeMode="cover"
-        style={[styles.image, styles[size]]}
-      />
+      <View style={size === "compact" ? styles.compactFrame : styles.frame}>
+        <Image
+          source={{ uri: image.src }}
+          accessibilityLabel={`${imageLabel(image)}. ${image.alt}`}
+          resizeMode="cover"
+          style={[styles.image, styles[size]]}
+        />
+        <Text style={styles.disclosure}>{imageLabel(image)}</Text>
+      </View>
     );
   }
 
@@ -36,6 +40,9 @@ export function ArticleImage({ image, size = "standard" }: Props) {
 }
 
 const styles = StyleSheet.create({
+  frame: { width: "100%", gap: spacing.xs },
+  compactFrame: { width: 104, gap: spacing.xs },
+  disclosure: { fontFamily: fonts.bodyMedium, fontSize: 12, lineHeight: 17, color: colors.ink },
   image: {
     width: "100%",
     backgroundColor: colors.surfaceMuted,

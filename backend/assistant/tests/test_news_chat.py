@@ -337,7 +337,8 @@ async def test_llm_reply_records_ai_usage_and_sends_history(db, llm_settings):
 
     assert reply.message.strategy == ResponseStrategy.llm
     assert reply.message.aiUsed is True
-    assert reply.message.content == "Respuesta del modelo."
+    assert reply.message.content.endswith("Respuesta del modelo.")
+    assert "no verifica los hechos" in reply.message.content
     assert [news.slug for news in reply.message.citedNews] == ["mercado-gt"]
 
     call = provider.calls[0]
@@ -438,6 +439,30 @@ async def test_unconfirmed_news_is_flagged_in_llm_reply(db, llm_settings):
     assert reply.message.confidence == ConfidenceLevel.low
     assert "en desarrollo" in reply.message.uncertainty
     assert "Aviso:" in reply.message.content
+
+
+async def test_model_cannot_promote_conflicting_news_to_confirmed(db, llm_settings):
+    document = make_news("conflicto", "Cifras distintas", verification=VerificationStatus.conflicting_sources)
+    document["verification"]["notes"] = "Las fuentes difieren sobre la cifra; no hay un total confirmado."
+    document["sources"][0]["supports"] = "La primera cifra, pendiente de contraste."
+    await db["news"].insert_one(document)
+    provider = FakeProvider("Lo confirmo: todo es verdadero.")
+    reply = await service(db, llm_settings, provider).reply(chat_request("Explícame esta noticia", newsId=str(document["_id"])))
+    assert reply.message.confidence == ConfidenceLevel.low
+    assert reply.message.citedNews[0].verificationStatus == "conflicting_sources"
+    assert "no verifica los hechos" in reply.message.content
+    assert "Las fuentes difieren" in reply.message.content
+    assert db["news"].documents[-1]["verification"]["status"] == VerificationStatus.conflicting_sources
+    context = provider.calls[0]["context"]["noticias"][0]
+    assert context["sources"][0]["url"] == document["sources"][0]["url"]
+    assert context["sources"][0]["supports"] == document["sources"][0]["supports"]
+
+
+def test_duplicate_secondary_source_hosts_do_not_raise_chat_confidence():
+    document = make_news("duplicada", "Una misma procedencia")
+    for index, source in enumerate(document["sources"]):
+        source["url"] = f"https://media.example/{index}"
+    assert compute_confidence([document]).level == ConfidenceLevel.medium
 
 
 # ----------------------------------------------------------------------
