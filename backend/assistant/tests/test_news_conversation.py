@@ -74,7 +74,8 @@ async def test_affirmative_followup_reaches_llm_with_the_previous_offer_and_cita
     assert second.message.intent != ResponseIntent.unsupported
     assert second.message.strategy == ResponseStrategy.llm
     assert len(provider.calls) == 2
-    assert provider.calls[1]["history"][-1] == {"role": "assistant", "content": offer}
+    assert provider.calls[1]["history"][-1] == {"role": "assistant", "content": first.message.content}
+    assert first.message.content.endswith(offer)
     assert {d["id"] for d in provider.calls[1]["context"]["noticias"]} == {
         c.id for c in first.message.citedNews
     }
@@ -196,7 +197,8 @@ async def test_exact_three_turn_sequence_keeps_the_last_offer_and_selection(data
     third = await service.reply(request("ok si hazlo", second.sessionId))
     assert first.sessionId == second.sessionId == third.sessionId
     assert third.message.intent != ResponseIntent.unsupported
-    assert provider.calls[-1]["history"][-1]["content"] == offer
+    assert provider.calls[-1]["history"][-1]["content"] == second.message.content
+    assert second.message.content.endswith(offer)
     assert {c.id for c in third.message.citedNews} == {c.id for c in first.message.citedNews}
 
 

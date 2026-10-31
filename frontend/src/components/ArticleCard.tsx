@@ -4,6 +4,7 @@ import { Bookmark, BookmarkCheck } from "lucide-react-native";
 import { ArticleImage } from "./ArticleImage";
 import { colors, fonts, radii, spacing } from "../theme";
 import { getCategoryLabel, type NewsArticle } from "../types";
+import { summaryLabel, verificationLabel } from "../features/news/editorialTransparency";
 
 type Variant = "lead" | "standard" | "secondary" | "compact";
 
@@ -58,6 +59,8 @@ export function ArticleCard({
               </Text>
             ) : null}
             <Text style={titleStyle}>{article.title}</Text>
+            <Text style={styles.verification}>{verificationLabel(article)}</Text>
+            {!isCompact || article.aiAssistance.summaryGenerated ? <Text style={styles.meta}>{summaryLabel(article)}</Text> : null}
             {!isCompact ? <Text style={styles.summary}>{article.summary}</Text> : null}
             <Text style={styles.meta}>
               {article.author} · {formatDate(article.publishedAt)} · {article.readingMinutes} min
@@ -136,6 +139,12 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bodyMedium,
     fontSize: 12,
     lineHeight: 17,
+  },
+  verification: {
+    color: colors.ink,
+    fontFamily: fonts.bodyBold,
+    fontSize: 13,
+    lineHeight: 19,
   },
   leadTitle: {
     color: colors.ink,

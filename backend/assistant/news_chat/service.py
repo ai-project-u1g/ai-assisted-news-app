@@ -673,9 +673,11 @@ class NewsChatService:
             ).model_dump_mongo()
         )
 
-        content = response.message
-        if confidence.level == ConfidenceLevel.low and confidence.uncertainty:
-            content = f"{content}\n\nAviso: {confidence.uncertainty}"
+        # The model's wording can never replace the stored editorial assessment.
+        preamble = "Elaboración con IA: no verifica los hechos ni sustituye la revisión humana."
+        if confidence.uncertainty:
+            preamble += f"\nAviso: {confidence.uncertainty}"
+        content = f"{preamble}\n\n{response.message}"
         return _Answer(content, ResponseStrategy.llm, plan.intent, plan.cited, confidence)
 
     @staticmethod

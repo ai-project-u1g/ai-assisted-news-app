@@ -3,6 +3,12 @@
 > **Nota:** MongoDB no impone foreign keys. Las relaciones mostradas son referencias lógicas
 > mediante `ObjectId`.
 
+La revisión editorial utiliza los embebidos existentes `verification`, `sources`, `image` y
+`aiAssistance`, junto con `auditLogs`. El panorama territorial y los puntajes del feed son
+proyecciones de lectura calculadas, sin colecciones, campos persistidos ni relaciones nuevas.
+La biblioteca administrativa es un catálogo en código: sus imágenes seleccionadas se guardan
+en el embebido `news.image` existente, conservando crédito, derechos y naturaleza visual.
+
 ## Diagrama de colecciones y relaciones
 
 ```mermaid

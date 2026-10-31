@@ -60,6 +60,8 @@ export type NewsArticle = {
   source: string;
   image: ArticleImage;
   feedReason?: string | null;
+  feedScore?: number | null;
+  feedComponents?: Record<"location" | "declared" | "inferred" | "freshness", number> | null;
 };
 
 export type AppUser = {

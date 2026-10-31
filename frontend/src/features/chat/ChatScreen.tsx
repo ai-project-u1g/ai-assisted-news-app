@@ -60,12 +60,13 @@ const STRATEGY_LABELS: Record<ChatStrategy, string> = {
 };
 
 const CONFIDENCE_LABELS: Record<ChatConfidence, string> = {
-  high: "Confianza alta",
-  medium: "Confianza media",
-  low: "Confianza baja",
+  high: "Respaldo documental alto",
+  medium: "Respaldo documental parcial",
+  low: "Respaldo documental limitado",
 };
 
 const VERIFICATION_LABELS: Record<string, string> = {
+  confirmed: "Confirmada por la redacción",
   developing: "En desarrollo",
   insufficient_sources: "Fuentes insuficientes",
   conflicting_sources: "Fuentes contradictorias",
@@ -548,6 +549,9 @@ function AssistantBubble({
         ) : null}
       </View>
       {message.uncertainty ? <Text style={styles.metaText}>{message.uncertainty}</Text> : null}
+      {message.intent !== "unsupported" ? <Text style={styles.metaText}>
+        El respaldo se calcula a partir de las noticias y sus fuentes; no expresa certeza del modelo. Abre una cita para consultar la procedencia original y las notas de revisión.
+      </Text> : null}
       {message.citedNews.length > 0 ? (
         <View style={styles.citations}>
           <Text style={styles.citationsTitle}>Noticias citadas</Text>

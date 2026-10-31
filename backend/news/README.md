@@ -7,6 +7,11 @@ propia base de datos MongoDB, ya sea local con Docker o en MongoDB Atlas.
 
 **No** depende del asistente existente (`backend/assistant/`).
 Incluye una API HTTP local de lectura para el frontend.
+La publicación autenticada aplica [controles editoriales](../../docs/design/database/02-criterios-de-contenido.md):
+borrador inicial, revisión humana explícita, fuentes con afirmaciones respaldadas, notas y
+clasificación de imágenes. `GET /coverage` ofrece cobertura territorial independiente del ranking.
+La [guía de demostración](../../docs/reviews/transparencia-responsible-ai-demo.md) conecta los
+cinco criterios de transparencia con interfaz, backend y pruebas sin credenciales.
 Los modelos representan el esquema lógico y el paquete `schema/` materializa la estructura física
 de forma no destructiva: colecciones, validators e índices.
 
@@ -245,6 +250,8 @@ Endpoints:
 ```text
 GET /health
 GET /news
+GET /coverage                # Publicadas por territorio, sin filtrar por temas ni límite del feed
+GET /admin/image-library     # Candidatos con procedencia; Bearer Firebase y rol admin
 GET /news/{slug}
 GET /auth/me                 # Bearer Firebase ID token requerido; resuelve users.firebaseUid
 POST /admin/news             # Bearer Firebase ID token + users.role=admin requerido
@@ -257,6 +264,11 @@ toma del token ni del request.
 
 `/news` devuelve documentos adaptados al contrato del frontend. No cambia la estructura de la
 base: lee desde `news`, busca el autor en `users` y deriva la categoría desde `news.topics`.
+
+La [biblioteca administrativa](../../docs/design/database/14-biblioteca-administrativa.md)
+reutiliza fotografías contextuales revisadas de Commons, con filtro opcional `?topic=`.
+Consultar no escribe noticias ni consume IA; la selección se adjunta al guardar por el flujo
+administrativo existente. No requiere secretos, colección o almacenamiento nuevos.
 
 ## Prueba local con frontend
 

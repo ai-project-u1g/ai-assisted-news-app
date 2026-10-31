@@ -5,6 +5,7 @@ import type {
   SourceType,
   UserRole,
   VerificationStatus,
+  ImageType,
 } from "../generated/newsContract";
 
 export type NewsFeedResult = {
@@ -47,6 +48,11 @@ export type AdminNewsCreateInput = {
   locationId: string;
   status: NewsStatus;
   verificationStatus: VerificationStatus;
+  verificationNotes?: string;
+  humanReviewed?: boolean;
+  summaryGenerated?: boolean;
+  topicsGenerated?: boolean;
+  sources?: AdminSourceInput[];
   sourceName?: string;
   sourceUrl?: string;
   sourceType?: SourceType;
@@ -54,7 +60,44 @@ export type AdminNewsCreateInput = {
   imageAlt?: string;
   imageCredit?: string;
   imageRights?: string;
+  imageType?: ImageType;
+  imageAiDisclosure?: string;
 };
+
+export type AdminSourceInput = Omit<NewsArticle["sources"][number], "accessedAt"> & { accessedAt?: string };
+export type NewsCoverage = Record<"local" | "national" | "international", NewsArticle | null>;
+
+export type ImageLibraryCandidate = {
+  id: string;
+  title: string;
+  topics: CategoryId[];
+  sourceUrl: string;
+  image: {
+    url: string;
+    alt: string;
+    type: Exclude<ImageType, "none">;
+    credit: string;
+    rights: string;
+    aiDisclosure: string | null;
+  };
+};
+
+export async function fetchImageLibrary(idToken: string, topic?: CategoryId): Promise<ImageLibraryCandidate[]> {
+  const query = topic ? `?topic=${encodeURIComponent(topic)}` : "";
+  const response = await fetch(`${requireApiBaseUrl()}/admin/image-library${query}`, {
+    headers: { Authorization: `Bearer ${idToken}` },
+  });
+  if (!response.ok) throw new Error("No pudimos cargar la biblioteca. Reintenta o conserva la noticia como borrador.");
+  return await response.json() as ImageLibraryCandidate[];
+}
+
+export async function fetchNewsCoverage(idToken?: string): Promise<NewsCoverage> {
+  const response = await fetch(`${requireApiBaseUrl()}/coverage`, {
+    headers: idToken ? { Authorization: `Bearer ${idToken}` } : undefined,
+  });
+  if (!response.ok) throw new Error("No pudimos cargar el panorama territorial.");
+  return await response.json() as NewsCoverage;
+}
 
 const NEWS_API_BASE_URL =
   process.env.EXPO_PUBLIC_NEWS_API_BASE_URL?.replace(/\/$/, "") ?? "http://localhost:8020";
@@ -157,8 +200,8 @@ export async function updateNewsProfile(
   if (!response.ok) {
     let message = "No pudimos guardar tus preferencias.";
     try {
-      const body = (await response.json()) as { detail?: string };
-      if (body.detail) message = body.detail;
+      const body = (await response.json()) as { detail?: unknown };
+      if (typeof body.detail === "string") message = body.detail;
     } catch {
       // Keep the generic message when the server does not return JSON.
     }
@@ -213,8 +256,9 @@ export async function createAdminNews(
   if (!response.ok) {
     let message = "No pudimos crear la noticia.";
     try {
-      const body = (await response.json()) as { detail?: string };
-      if (body.detail) message = body.detail;
+      const body = (await response.json()) as { detail?: string | { msg?: string }[] };
+      if (typeof body.detail === "string") message = body.detail;
+      else if (Array.isArray(body.detail)) message = body.detail.map((issue) => issue.msg).filter(Boolean).join("\n") || message;
     } catch {
       // Keep the generic message when the server does not return JSON.
     }

@@ -14,6 +14,9 @@ La prueba realiza bootstrap canónico dos veces, verifica las 32 noticias y 16
 ubicaciones, consume las 28 publicaciones mediante la API y consulta los 14 topics
 desde el chat, abriendo cada cita por slug. También verifica que administración y
 chat compartan identidad y token y que se mantengan validators, índices y TTL.
+Comprueba además una publicación con revisión humana, imagen de la biblioteca y
+fuentes con fechas BSON, su lectura en feed/panorama/chat y el rechazo de una
+publicación sin revisión. Estos datos usan el esquema vigente, sin migraciones.
 Usa exclusivamente `stub`: no hay llamadas reales a IA ni credenciales externas.
 
 Está separada de las suites unitarias y no se conecta a Atlas ni a la MongoDB de

@@ -165,3 +165,39 @@ def compose_feed(
             break
         selected.append(item)
     return selected
+
+
+def select_coverage(
+    documents: list[dict[str, Any]],
+    user: dict[str, Any] | None,
+    locations: list[dict[str, Any]],
+) -> dict[str, dict[str, Any] | None]:
+    """Newest published item per territory, independently of affinity and feed limit."""
+    by_id = {str(location["_id"]): location for location in locations}
+    selected_id = _location_id((user or {}).get("simulatedLocationId"))
+    selected_location = by_id.get(selected_id) or {}
+    country_code = selected_location.get("countryCode")
+    country_ids = {
+        location_id for location_id, location in by_id.items()
+        if country_code and location.get("countryCode") == country_code
+    }
+    coverage = {"local": None, "national": None, "international": None}
+    published = sorted(
+        (document for document in documents if document.get("status") == "published"),
+        key=lambda document: (-_published_timestamp(document), str(document.get("_id", ""))),
+    )
+    for document in published:
+        scope = document.get("geographicScope") or {}
+        level = scope.get("level")
+        ids = {str(value) for value in scope.get("locationIds") or []}
+        if level == "international":
+            key = "international"
+        elif level == "country" and ids.intersection(country_ids):
+            key = "national"
+        elif level in {"city", "region"} and selected_id in ids:
+            key = "local"
+        else:
+            continue
+        if coverage[key] is None:
+            coverage[key] = document
+    return coverage

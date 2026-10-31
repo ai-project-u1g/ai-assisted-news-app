@@ -2,6 +2,7 @@
 
 import os
 import time
+from datetime import datetime
 
 import pytest
 from bson import ObjectId
@@ -301,3 +302,90 @@ def test_canonical_bootstrap_api_chat_and_admin_share_one_schema(monkeypatch, tm
             assert database.aiUsage.count_documents({}) == 0
             assert check_schema(database).ok
             print("Admin compartido y validators/índices/TTL: OK; sin llamadas a IA")
+
+            # The new editorial flow must also write through real MongoDB validators.
+            before_publication = database.news.count_documents({})
+            assert api.get("/admin/image-library").status_code == 401
+            assert (
+                api.get("/admin/image-library", headers=reader_headers).status_code
+                == 403
+            )
+            candidates = api.get("/admin/image-library", headers=admin_headers)
+            assert candidates.status_code == 200, candidates.text
+            image = candidates.json()[0]["image"]
+            payload = {
+                "title": "Publicación editorial de integración",
+                "slug": "publicacion-editorial-integracion",
+                "summary": "Resumen sintético revisado.",
+                "content": "Contenido sintético para comprobar los validadores vigentes.",
+                "topic": "medio_ambiente",
+                "locationId": location_id,
+                "status": "published",
+                "verificationStatus": "confirmed",
+                "verificationNotes": "Fixture: se contrastó la afirmación con el documento original.",
+                "humanReviewed": True,
+                "summaryGenerated": True,
+                "sources": [
+                    {
+                        "name": "Documento de prueba",
+                        "url": "https://fixture.example.test/official",
+                        "sourceType": "official",
+                        "supports": "La afirmación de la fixture.",
+                        "publishedAt": "2026-10-30T12:00:00Z",
+                    }
+                ],
+                "imageUrl": image["url"],
+                "imageAlt": image["alt"],
+                "imageType": image["type"],
+                "imageCredit": image["credit"],
+                "imageRights": image["rights"],
+            }
+            rejected = api.post(
+                "/admin/news",
+                headers=admin_headers,
+                json={**payload, "humanReviewed": False},
+            )
+            assert rejected.status_code == 422, rejected.text
+            assert database.news.count_documents({}) == before_publication
+            published = api.post("/admin/news", headers=admin_headers, json=payload)
+            assert published.status_code == 201, published.text
+            saved = database.news.find_one({"slug": payload["slug"]})
+            assert saved["status"] == "published"
+            assert saved["image"] == image
+            assert saved["verification"]["reviewedBy"] == author["_id"]
+            assert saved["verification"]["notes"] == payload["verificationNotes"]
+            assert saved["aiAssistance"]["summaryGenerated"] is True
+            assert saved["aiAssistance"]["imageGenerated"] is False
+            assert isinstance(saved["sources"][0]["publishedAt"], datetime)
+            assert isinstance(saved["sources"][0]["accessedAt"], datetime)
+            assert isinstance(saved["verification"]["reviewedAt"], datetime)
+            detail = api.get(f"/news/{payload['slug']}")
+            assert detail.status_code == 200, detail.text
+            assert (
+                detail.json()["sources"][0]["supports"]
+                == payload["sources"][0]["supports"]
+            )
+            panorama = api.get("/coverage", headers=reader_headers)
+            assert panorama.status_code == 200, panorama.text
+            assert set(panorama.json()) == {"local", "national", "international"}
+            feed = api.get("/news", headers=reader_headers)
+            assert feed.status_code == 200, feed.text
+            assert all(item["feedComponents"] is not None for item in feed.json())
+            assert "feedComponents" not in saved and "feedScore" not in saved
+            explanation = chat.post(
+                "/chat",
+                headers=reader_headers,
+                json={
+                    "message": "Explícame esta noticia",
+                    "newsId": str(saved["_id"]),
+                },
+            )
+            assert explanation.status_code == 200, explanation.text
+            assert explanation.json()["message"]["citedNews"][0]["id"] == str(
+                saved["_id"]
+            )
+            assert check_schema(database).ok
+            assert database.aiUsage.count_documents({}) == 0
+            print(
+                "Publicación revisada, imagen de biblioteca, fuentes BSON, panorama, feed y chat: OK sobre MongoDB real"
+            )

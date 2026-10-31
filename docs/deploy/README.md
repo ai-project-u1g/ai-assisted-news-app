@@ -13,6 +13,8 @@ Para generar un instalador Android, sigue la
 [guía del APK paso a paso](android-apk-paso-a-paso.md).
 Para actualizar automáticamente la descarga junto con Hosting, sigue la
 [guía Android automática](android-automatico-paso-a-paso.md).
+Para usar la aplicación desde iPhone mediante navegador y compartir el enlace directo,
+sigue [Acceso web móvil](acceso-web-movil.md).
 
 ## Comandos
 
@@ -60,5 +62,6 @@ interacciones y chat requieren Firebase ID tokens; feed y detalle públicos sigu
 disponibles. El límite de instancias no reemplaza los controles de presupuesto IA.
 
 `make firebase-deploy` por sí solo no genera un build móvil. El workflow de main
-sí compila Android antes de publicar Hosting y requiere EXPO_TOKEN. iOS sigue
-pendiente. Consulta la [guía del frontend](../../frontend/README.md).
+sí compila Android antes de publicar Hosting y requiere EXPO_TOKEN. Para iPhone el equipo
+eligió la [versión web móvil](acceso-web-movil.md), sin un build iOS en este alcance.
+Consulta la [guía del frontend](../../frontend/README.md).

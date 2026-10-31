@@ -5,6 +5,9 @@ App Expo + React Native + TypeScript con Firebase Auth y feed personalizado desd
 Google Sign-In nativo requiere un build propio; Expo Go solo permite comprobar
 los recorridos compatibles con su cliente, como el invitado Firebase.
 
+**Acceso web directo:** [Abrir AI News](https://adfasdfasfd-1899a.web.app/).
+En iPhone se usa esta versión desde Safari; ver la [guía de acceso web móvil](../docs/deploy/acceso-web-movil.md).
+
 Para publicar el portal, sigue la [guía Firebase paso a paso](../docs/deploy/firebase-paso-a-paso.md).
 `make firebase-check-config` valida los parámetros y `make firebase-deploy` genera
 el export web y lo publica en Hosting.
@@ -21,8 +24,8 @@ Esto abre el Metro Bundler con un código QR en la terminal:
 
 - **Android**: instalá [Expo Go](https://play.google.com/store/apps/details?id=host.exp.exponent)
   y escaneá el QR desde la app.
-- **iPhone**: instalá [Expo Go](https://apps.apple.com/app/expo-go/id982107779)
-  y escaneá el QR con la Cámara del sistema (te ofrece abrirlo en Expo Go).
+- **iPhone**: usá la [versión web](https://adfasdfasfd-1899a.web.app/) desde Safari.
+  La distribución prevista para iPhone es el acceso web móvil.
 - Ambos dispositivos deben estar en la misma red Wi-Fi que la computadora. Si
   no conectan, corré `npm start -- --tunnel`.
 
@@ -81,6 +84,17 @@ Si la API no responde, la app muestra un estado de error. No existe un dataset
 local de respaldo en el frontend.
 
 ## Qué vas a ver
+
+El feed muestra el estado de verificación y distingue resúmenes de IA. «Cómo se ordena tu feed»
+explica los pesos y límites; «Panorama por territorio» consulta cobertura sin filtrar por intereses.
+El detalle expone fuentes originales, fechas, afirmaciones respaldadas y revisión; las imágenes
+generadas/alteradas llevan etiqueta visible en todas las tarjetas. El panel comienza en borrador
+y exige una decisión humana documentada al publicar. Ver la
+[guía de demostración de transparencia](../docs/reviews/transparencia-responsible-ai-demo.md).
+
+En **Nueva noticia → Obtener imagen**, se puede consultar una biblioteca contextual de Commons,
+previsualizar, revisar procedencia/licencia y adjuntar una foto. Cancelar o fallar conserva el texto
+y la imagen previa; solo se habilita aceptar cuando la vista previa cargó y se confirmó su revisión.
 
 Después de iniciar sesión, la app móvil abre el asistente. En la web de escritorio
 abre el feed; en la web móvil, sin una ruta explícita, abre el asistente. Los

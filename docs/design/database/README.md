@@ -21,6 +21,7 @@ Bloque de documentos que define el contenido de la base de datos y las reglas qu
 | [11 Automatización y reseed](11-automatizacion-y-reseed.md) | Bootstrap, verify, ownership, dry-run, confirmación y reseed seguro |
 | [12 Verificación final](12-verificacion-final.md) | Cierre, reproducibilidad y entrada para nuevos desarrolladores |
 | [13 Imágenes del dataset demo](13-imagenes-demo.md) | Procedencia, licencias, IA y validación HTTP de las imágenes |
+| [14 Biblioteca administrativa](14-biblioteca-administrativa.md) | Obtención, previsualización y selección humana de fotografías contextuales |
 
 ## Cómo leer los criterios
 
@@ -29,8 +30,9 @@ significado del dato, no el mecanismo que lo produce.
 
 - Correcto: una noticia incierta es aquella cuyo `verification.status` vale `developing`,
   `insufficient_sources` o `conflicting_sources`.
-- Fuera de alcance: el procedimiento por el cual se determina cuál de esos tres valores
-  corresponde.
+- El procedimiento del flujo administrativo vigente se documenta en
+  [02 Criterios de contenido](02-criterios-de-contenido.md#procedimiento-administrativo-de-publicación).
+  Se aplica en el límite de publicación y conserva el esquema aprobado.
 
 ## Parámetros del diseño
 

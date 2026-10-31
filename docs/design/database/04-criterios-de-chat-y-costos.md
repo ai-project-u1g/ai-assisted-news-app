@@ -77,6 +77,17 @@ Reglas:
 - `uncertainty` describe en texto qué queda sin resolver, y admite `null` cuando no aplica.
 - Cuando una noticia citada tiene un `verification.status` distinto de `confirmed`, esa condición
   debe quedar reflejada en la respuesta.
+- El cálculo usa el estado editorial y el respaldo de fuentes; dos enlaces del mismo host no
+  elevan por sí solos el nivel. Dos sitios diferentes tampoco prueban independencia real.
+- En pantalla se presenta como **respaldo documental**, para evitar interpretarlo como una
+  probabilidad de verdad o la confianza subjetiva del modelo.
+- Toda elaboración `llm` lleva un prefacio añadido por código que declara que la IA no verifica
+  los hechos. La incertidumbre y las notas registradas preceden al texto del modelo. La respuesta
+  no puede modificar `news.verification`, publicar noticias ni resolver contradicciones.
+- El contexto del modelo incluye las URLs, afirmaciones respaldadas, fechas de fuente, notas de
+  verificación y declaraciones de IA/imagen. Son datos, no instrucciones ni material autenticado.
+- Las citas de la pantalla llevan al detalle y de ahí a las fuentes originales. Se conservan las
+  relaciones existentes; no se duplican las fuentes dentro de `chatSessions`.
 
 ## Consumo y presupuesto de IA
 

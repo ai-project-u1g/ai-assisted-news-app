@@ -30,6 +30,12 @@ import {
 
 import { ArticleCard } from "../../components/ArticleCard";
 import { ArticleImage } from "../../components/ArticleImage";
+import { ImageLibraryPicker } from "../../components/ImageLibraryPicker";
+import { ArticleTransparency } from "../../components/ArticleTransparency";
+import { EditorialSourcesForm, emptySource } from "../../components/EditorialSourcesForm";
+import { FeedExplanation } from "../../components/FeedExplanation";
+import { TerritoryCoverage } from "../../components/TerritoryCoverage";
+import { summaryLabel } from "./editorialTransparency";
 import { AppButton } from "../../components/AppButton";
 import { ChatScreen } from "../chat/ChatScreen";
 import {
@@ -42,6 +48,7 @@ import {
 import {
   createAdminNews,
   fetchNewsFeedWithStatus,
+  fetchNewsCoverage,
   fetchNewsArticleBySlug,
   fetchLocations,
   fetchNewsProfile,
@@ -56,6 +63,7 @@ import {
   type AdminNewsCreateInput,
   type NewsLocation,
   type NewsProfile,
+  type NewsCoverage,
 } from "../../services/newsService";
 import { getCurrentFirebaseIdToken } from "../../services/firebaseClient";
 import {
@@ -87,15 +95,19 @@ const DEFAULT_ADMIN_FORM = {
   topic: "actualidad" as CategoryId,
   keywords: "",
   locationId: "",
-  status: "published" as AdminNewsCreateInput["status"],
-  verificationStatus: "confirmed" as AdminNewsCreateInput["verificationStatus"],
-  sourceType: "other" as NonNullable<AdminNewsCreateInput["sourceType"]>,
-  sourceName: "",
-  sourceUrl: "",
+  status: "draft" as AdminNewsCreateInput["status"],
+  verificationStatus: "developing" as AdminNewsCreateInput["verificationStatus"],
+  verificationNotes: "",
+  humanReviewed: false,
+  summaryGenerated: false,
+  topicsGenerated: false,
+  sources: [emptySource()],
   imageUrl: "",
   imageAlt: "",
   imageCredit: "",
   imageRights: "",
+  imageType: "none" as NonNullable<AdminNewsCreateInput["imageType"]>,
+  imageAiDisclosure: "",
 };
 
 type AdminFormState = typeof DEFAULT_ADMIN_FORM;
@@ -203,6 +215,8 @@ export function NewsFeedScreen({ user, onSignOut }: Props) {
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
+  const [coverage, setCoverage] = useState<NewsCoverage | null>(null);
+  const [coverageError, setCoverageError] = useState<string | null>(null);
   const feedScrollRef = useRef<ScrollView>(null);
   const scrollYRef = useRef(0);
   const scrollViewportHeightRef = useRef(0);
@@ -255,6 +269,19 @@ export function NewsFeedScreen({ user, onSignOut }: Props) {
     return () => {
       active = false;
     };
+  }, [feedRefreshKey, isReadingArticle]);
+
+  useEffect(() => {
+    if (isReadingArticle) return;
+    let active = true;
+    setCoverage(null);
+    setCoverageError(null);
+    void getCurrentFirebaseIdToken().then(fetchNewsCoverage).then((result) => {
+      if (active) setCoverage(result);
+    }).catch(() => {
+      if (active) setCoverageError("No pudimos cargar el panorama territorial.");
+    });
+    return () => { active = false; };
   }, [feedRefreshKey, isReadingArticle]);
 
   useEffect(() => {
@@ -524,8 +551,9 @@ export function NewsFeedScreen({ user, onSignOut }: Props) {
   }, []);
 
   const savedArticles = useMemo(
-    () => articles.filter((article) => savedIds.includes(article.id)),
-    [articles, savedIds],
+    () => [...new Map([...articles, ...Object.values(coverage ?? {}).filter((article): article is NewsArticle => Boolean(article))]
+      .map((article) => [article.id, article])).values()].filter((article) => savedIds.includes(article.id)),
+    [articles, coverage, savedIds],
   );
 
   const openArticle = useCallback((article: NewsArticle) => {
@@ -587,7 +615,7 @@ export function NewsFeedScreen({ user, onSignOut }: Props) {
     field: K,
     value: AdminFormState[K],
   ) {
-    setAdminForm((current) => ({ ...current, [field]: value }));
+    setAdminForm((current) => ({ ...current, humanReviewed: false, [field]: value }));
     setAdminFormError(null);
     setAdminSuccess(null);
   }
@@ -597,15 +625,18 @@ export function NewsFeedScreen({ user, onSignOut }: Props) {
     const summary = adminForm.summary.trim();
     const content = adminForm.content.trim();
     const locationId = adminForm.locationId.trim();
-    const sourceName = adminForm.sourceName.trim();
-    const sourceUrl = adminForm.sourceUrl.trim();
 
     if (!title || !summary || !content || !locationId) {
       setAdminFormError("Completa título, resumen, contenido y ubicación.");
       return null;
     }
-    if (Boolean(sourceName) !== Boolean(sourceUrl)) {
-      setAdminFormError("La fuente necesita nombre y URL juntos.");
+    const sources = adminForm.sources.filter((source) => source.name.trim() || source.url.trim() || source.supports?.trim());
+    if (sources.some((source) => !source.name.trim() || !source.url.trim())) {
+      setAdminFormError("Cada fuente necesita nombre y URL juntos.");
+      return null;
+    }
+    if (adminForm.status === "published" && (!adminForm.humanReviewed || !adminForm.verificationNotes.trim() || sources.length === 0)) {
+      setAdminFormError("Antes de publicar, agrega fuentes, notas de verificación y confirma tu revisión humana.");
       return null;
     }
 
@@ -622,13 +653,17 @@ export function NewsFeedScreen({ user, onSignOut }: Props) {
       locationId,
       status: adminForm.status,
       verificationStatus: adminForm.verificationStatus,
-      sourceName: sourceName || undefined,
-      sourceUrl: sourceUrl || undefined,
-      sourceType: adminForm.sourceType,
+      sources,
+      verificationNotes: adminForm.verificationNotes.trim() || undefined,
+      humanReviewed: adminForm.humanReviewed,
+      summaryGenerated: adminForm.summaryGenerated,
+      topicsGenerated: adminForm.topicsGenerated,
       imageUrl: adminForm.imageUrl.trim() || undefined,
       imageAlt: adminForm.imageAlt.trim() || undefined,
       imageCredit: adminForm.imageCredit.trim() || undefined,
       imageRights: adminForm.imageRights.trim() || undefined,
+      imageType: adminForm.imageType,
+      imageAiDisclosure: adminForm.imageAiDisclosure.trim() || undefined,
     };
   }
 
@@ -645,22 +680,20 @@ export function NewsFeedScreen({ user, onSignOut }: Props) {
     setAdminSuccess(null);
     try {
       const idToken = await getCurrentFirebaseIdToken();
-      const created = await createAdminNews(idToken, input);
+      await createAdminNews(idToken, input);
       if (input.status === "published") {
-        setArticles((current) => [
-          created,
-          ...current.filter((article) => article.id !== created.id),
-        ]);
+        setFeedRefreshKey((value) => value + 1);
       }
       setAdminSuccess(
         input.status === "published"
-          ? "Noticia publicada y agregada al feed local."
+          ? "Noticia publicada. El feed se actualizará según su relevancia."
           : "Borrador guardado en MongoDB.",
       );
       setAdminForm({
         ...DEFAULT_ADMIN_FORM,
         locationId: input.locationId,
         topic: input.topic,
+        sources: [emptySource()],
       });
     } catch (error) {
       setAdminFormError(
@@ -871,7 +904,7 @@ export function NewsFeedScreen({ user, onSignOut }: Props) {
   );
 
   function updateAdminTextField(field: keyof AdminFormState, value: string) {
-    setAdminForm((current) => ({ ...current, [field]: value }));
+    setAdminForm((current) => ({ ...current, [field]: value, humanReviewed: false }));
     setAdminFormError(null);
     setAdminSuccess(null);
   }
@@ -917,7 +950,8 @@ export function NewsFeedScreen({ user, onSignOut }: Props) {
     <Pressable
       key={optionKey}
       accessibilityRole="button"
-      accessibilityState={{ selected: active }}
+      accessibilityState={{ selected: active, disabled: isSubmittingAdminNews }}
+      disabled={isSubmittingAdminNews}
       onPress={onPress}
       style={({ pressed }) => [
         styles.formChip,
@@ -927,6 +961,18 @@ export function NewsFeedScreen({ user, onSignOut }: Props) {
     >
       <Text style={[styles.formChipLabel, active ? styles.formChipLabelActive : null]}>
         {label}
+      </Text>
+    </Pressable>
+  );
+
+  const renderAdminCheckbox = (label: string, field: "humanReviewed" | "summaryGenerated" | "topicsGenerated") => (
+    <Pressable accessibilityRole="checkbox" accessibilityLabel={label}
+      aria-checked={adminForm[field]} aria-disabled={isSubmittingAdminNews}
+      accessibilityState={{ checked: adminForm[field], disabled: isSubmittingAdminNews }}
+      disabled={isSubmittingAdminNews} onPress={() => updateAdminField(field, !adminForm[field])}
+      style={({ pressed }) => [styles.formChip, { minHeight: 48 }, adminForm[field] && styles.formChipActive, pressed && styles.pressed]}>
+      <Text style={[styles.formChipLabel, adminForm[field] && styles.formChipLabelActive]}>
+        {adminForm[field] ? "Sí · " : "No · "}{label}
       </Text>
     </Pressable>
   );
@@ -1047,6 +1093,13 @@ export function NewsFeedScreen({ user, onSignOut }: Props) {
                   () => updateAdminField("verificationStatus", "conflicting_sources"),
                 )}
               </View>
+              <Text style={styles.formHint}>Una respuesta de IA no es una fuente ni una prueba de veracidad. Confirma solo tras revisar una fuente oficial/primaria o corroborar con dos sitios distintos e independientes. Con respaldo insuficiente, guarda un borrador. En desarrollo o con contradicciones, explica qué se sabe y qué no antes de publicar.</Text>
+              {renderAdminTextField({ label: "Notas de verificación", field: "verificationNotes",
+                placeholder: "Qué afirmaciones contrastaste, con qué evidencia, contradicciones y límites pendientes.", multiline: true })}
+              {renderAdminCheckbox("El resumen se generó con IA", "summaryGenerated")}
+              {renderAdminCheckbox("Los temas se generaron con IA", "topicsGenerated")}
+              {renderAdminCheckbox("He contrastado las fuentes y revisado el contenido", "humanReviewed")}
+              <Text style={styles.formHint}>La persona autenticada asume la decisión editorial. Su identidad y fecha quedan registradas al confirmar la revisión. Si editas la noticia, debes revisarla de nuevo.</Text>
             </View>
 
             <View style={styles.formSection}>
@@ -1081,35 +1134,27 @@ export function NewsFeedScreen({ user, onSignOut }: Props) {
             </View>
 
             <View style={styles.formSection}>
-              <Text style={styles.formSectionTitle}>Fuente e imagen</Text>
-              {renderAdminTextField({
-                label: "Nombre de fuente",
-                field: "sourceName",
-                placeholder: "Medio, institución o fuente primaria",
-              })}
-              {renderAdminTextField({
-                label: "URL de fuente",
-                field: "sourceUrl",
-                placeholder: "https://example.com/noticia",
-                keyboardType: "url",
-              })}
-              <Text style={styles.fieldLabel}>Tipo de fuente</Text>
+              <Text style={styles.formSectionTitle}>Fuentes y evidencia</Text>
+              <EditorialSourcesForm sources={adminForm.sources} disabled={isSubmittingAdminNews}
+                onChange={(sources) => updateAdminField("sources", sources)} />
+            </View>
+            <View style={styles.formSection}>
+              <Text style={styles.formSectionTitle}>Imagen y contexto visual</Text>
+              <ImageLibraryPicker topic={adminForm.topic} disabled={isSubmittingAdminNews}
+                onSelect={({ image }) => {
+                  setAdminForm(current => ({ ...current, imageUrl: image.url, imageAlt: image.alt,
+                    imageType: image.type, imageCredit: image.credit, imageRights: image.rights,
+                    imageAiDisclosure: image.aiDisclosure ?? "", humanReviewed: false }));
+                  setAdminFormError(null);
+                  setAdminSuccess(null);
+                }} />
+              <Text style={styles.formHint}>Clasifica el visual según su procedencia real. Una imagen generada o alterada con IA nunca documenta el hecho. Confirma autoría y permiso de uso antes de publicar.</Text>
               <View style={styles.formChips}>
-                {renderAdminOption("Oficial", adminForm.sourceType === "official", () =>
-                  updateAdminField("sourceType", "official"),
-                )}
-                {renderAdminOption("Medio", adminForm.sourceType === "media", () =>
-                  updateAdminField("sourceType", "media"),
-                )}
-                {renderAdminOption("Primaria", adminForm.sourceType === "primary_source", () =>
-                  updateAdminField("sourceType", "primary_source"),
-                )}
-                {renderAdminOption("Testigo", adminForm.sourceType === "witness", () =>
-                  updateAdminField("sourceType", "witness"),
-                )}
-                {renderAdminOption("Otra", adminForm.sourceType === "other", () =>
-                  updateAdminField("sourceType", "other"),
-                )}
+                {([
+                  ["none", "Sin imagen"], ["photograph", "Fotografía"], ["illustration", "Ilustración"],
+                  ["ai_generated", "Generada con IA"], ["ai_modified", "Alterada con IA"],
+                ] as const).map(([type, label]) => renderAdminOption(label, adminForm.imageType === type,
+                  () => updateAdminField("imageType", type), type))}
               </View>
               {renderAdminTextField({
                 label: "URL de imagen",
@@ -1132,6 +1177,10 @@ export function NewsFeedScreen({ user, onSignOut }: Props) {
                 field: "imageRights",
                 placeholder: "Uso permitido, licencia o nota interna",
               })}
+              {adminForm.imageType === "ai_generated" || adminForm.imageType === "ai_modified" ? renderAdminTextField({
+                label: "Declaración de IA de la imagen", field: "imageAiDisclosure",
+                placeholder: "Cómo se generó o alteró. Aclara que no documenta el acontecimiento.", multiline: true,
+              }) : null}
             </View>
 
             <View style={styles.adminActions}>
@@ -1148,6 +1197,7 @@ export function NewsFeedScreen({ user, onSignOut }: Props) {
                   setAdminForm({
                     ...DEFAULT_ADMIN_FORM,
                     locationId: adminForm.locationId,
+                    sources: [emptySource()],
                   })
                 }
                 disabled={isSubmittingAdminNews}
@@ -1158,6 +1208,14 @@ export function NewsFeedScreen({ user, onSignOut }: Props) {
       </>
     );
   };
+
+  const renderCoverage = () => (
+    <TerritoryCoverage coverage={coverage} error={coverageError} isSaved={isSaved} onToggleSave={toggleSave}
+      onOpen={(article) => {
+        pendingFeedOpenRef.current = { slug: article.slug, position: null };
+        navigate({ name: "article", slug: article.slug });
+      }} />
+  );
 
   const renderHome = () => {
     const hasSearch = searchQuery.trim().length > 0;
@@ -1175,8 +1233,10 @@ export function NewsFeedScreen({ user, onSignOut }: Props) {
         {renderNotice()}
         {renderInlineSearch()}
         {renderPreferences()}
+        <FeedExplanation />
         {hasSearch ? (
           <View style={styles.searchResultsBlock}>
+            {renderCoverage()}
             <Text style={styles.resultsTitle}>Resultados</Text>
             {searchResults.length === 0 ? (
               <View style={styles.emptyState}>
@@ -1248,6 +1308,8 @@ export function NewsFeedScreen({ user, onSignOut }: Props) {
               </View>
             </View>
             ) : null}
+
+            {renderCoverage()}
 
             {hasArticles ? (
             <View style={styles.section}>
@@ -1373,6 +1435,7 @@ export function NewsFeedScreen({ user, onSignOut }: Props) {
         >
           <Text style={styles.category}>{getCategoryLabel(currentArticle.category)}</Text>
           <Text style={styles.articleTitle}>{currentArticle.title}</Text>
+          <Text style={styles.articleMeta}>{summaryLabel(currentArticle)}</Text>
           <Text style={styles.articleSummary}>{currentArticle.summary}</Text>
           <Text style={styles.articleMeta}>
             {currentArticle.author} · {formatLongDate(currentArticle.publishedAt)} ·{" "}
@@ -1380,23 +1443,17 @@ export function NewsFeedScreen({ user, onSignOut }: Props) {
           </Text>
 
           <ArticleImage image={currentArticle.image} size="lead" />
-          <Text style={styles.credit}>{currentArticle.image.credit}</Text>
+          {currentArticle.image.src ? <>
+          <Text style={styles.credit}>{currentArticle.image.alt}</Text>
+          <Text style={styles.credit}>Crédito: {currentArticle.image.credit} · Derechos: {currentArticle.image.license}</Text>
+          </> : null}
           {currentArticle.image.aiDisclosure ? (
             <Text style={styles.credit}>{currentArticle.image.aiDisclosure}</Text>
           ) : null}
-          {currentArticle.verification ? (
-            <Text style={styles.articleMeta}>
-              Verificación: {{
-                confirmed: "Confirmada",
-                developing: "En desarrollo",
-                insufficient_sources: "Fuentes insuficientes",
-                conflicting_sources: "Fuentes contradictorias",
-              }[currentArticle.verification.status]}
-            </Text>
-          ) : null}
-          {currentArticle.sources.map((source) => (
-            <Text key={source.url} style={styles.credit}>Fuente: {source.name} · {source.url}</Text>
-          ))}
+          {currentArticle.feedComponents ? <Text style={styles.articleMeta}>
+            Afinidad: {currentArticle.feedScore} puntos · ubicación {currentArticle.feedComponents.location}, temas elegidos {currentArticle.feedComponents.declared}, lectura {currentArticle.feedComponents.inferred}, actualidad {currentArticle.feedComponents.freshness}. {currentArticle.feedReason}
+          </Text> : null}
+          <ArticleTransparency article={currentArticle} />
 
           <Pressable
             accessibilityRole="button"

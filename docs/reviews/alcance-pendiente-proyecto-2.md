@@ -1,6 +1,12 @@
 # Alcance pendiente del Proyecto 2 — tareas por completar
 
-Actualizado: 2026-10-20. Referencia de código revisada: `ee9cc00`.
+Actualizado parcialmente: 2026-10-30. Los puntos 6/7 y la transparencia del feed/chat
+se implementaron en el [loop editorial](../../backend/loops/handoffs/editorial-transparency-result.md).
+Las demás secciones conservan su seguimiento anterior y sus verificaciones pendientes.
+
+Actualización posterior, 2026-10-30: implementada la obtención de imágenes del punto 5 mediante
+biblioteca contextual, vista previa y selección humana. Para iPhone, el equipo eligió documentar
+el [acceso web móvil con enlace directo](../deploy/acceso-web-movil.md), sin desarrollar build iOS.
 
 Este documento reúne los **ocho puntos seleccionados por el usuario** y las tareas
 concretas para completarlos. Los puntos 2–4 se implementaron en el Loop 11; queda
@@ -23,9 +29,9 @@ registradas en [criterios de personalización](../design/database/03-criterios-d
 | 2. Feed personalizado | Implementado en Loop 11; falta validación manual con cuentas reales. | Perfil compartido, ubicación/temas por cuenta, ranking servidor e integración frontend. |
 | 3. Aprendizaje de intereses | Implementado en Loop 11; señales y fórmula cubiertas por pruebas controladas. | Medición de aperturas/lecturas, inferencia gradual e impacto posterior en el feed. |
 | 4. Prominencia y diversidad | Implementado en Loop 11; queda revisión visual manual web/móvil. | Composición determinista, destacados según ranking y exposición a otros ámbitos. |
-| 5. Imagen desde administración | URL manual o placeholder. | Obtención o generación dentro del formulario, previsualización y selección humana. |
-| 6. Identificación de imágenes IA | Campos/validaciones existentes; portal fuerza fotografía. | Tipo y disclosure desde administración hasta tarjetas y detalle. |
-| 7. Verificación editorial | Estado elegible; fuentes opcionales y revisión automática. | Política de revisión, fuentes suficientes y comunicación efectiva de incertidumbre. |
+| 5. Imagen desde administración | Implementada: biblioteca contextual con vista previa y revisión humana. | Comprobar el flujo en la versión publicada; el código no se despliega en este loop. |
+| 6. Identificación de imágenes IA | Implementada: clasificación explícita y avisos en feed/detalle. | Comprobación con contenido y dispositivos reales; obtención de imagen sigue en punto 5. |
+| 7. Verificación editorial | Implementada: fuentes múltiples, notas y revisión humana exigidas por servidor. | Ejecutar demostración con el equipo; no constituye verificación automática de verdad. |
 | 8. Chat como pantalla inicial | Entrada normal al feed. | Chat en móvil, feed para invitado web y panel para administrador web. |
 
 ## 1. Firebase Authentication
@@ -235,39 +241,41 @@ de oferta se resuelve sin espacios engañosos ni contenido inventado.
 - El formulario administrativo permite pegar URL y escribir alt, crédito y derechos.
 - Sin imagen, la API guarda tipo `none` y
   [ArticleImage](../../frontend/src/components/ArticleImage.tsx) muestra un placeholder.
-- No hay una acción integrada que obtenga o genere una imagen para la noticia.
+- **Obtener imagen** consulta una biblioteca de seis fotografías contextuales de Commons,
+  con filtro por categoría y acceso a la biblioteca completa. Se conserva procedencia, crédito,
+  licencia y pie que aclara que no documenta el hecho de la noticia.
+- La selección requiere previsualización cargada y revisión humana. Cancelar, error, resultados
+  vacíos o una respuesta tardía no reemplazan la imagen ni el contenido en edición.
 
 ### Lo que falta y tareas que hay que realizar
 
-- [ ] Elegir una vía inicial para obtener una imagen: selección de una biblioteca
+- [x] Elegir una vía inicial para obtener una imagen: selección de una biblioteca
   autorizada, búsqueda con derechos adecuados o generación. El PDF no obliga a implementar todas.
-- [ ] Definir procedencia, derechos y cómo conservar una URL utilizable de la imagen
+- [x] Definir procedencia, derechos y cómo conservar una URL utilizable de la imagen
   sin asumir que ya existe infraestructura de almacenamiento.
-- [ ] Añadir una acción «Obtener imagen» o equivalente dentro de la noticia en edición.
-- [ ] Mostrar estados de carga, candidatos/resultado, previsualización, selección
+- [x] Añadir una acción «Obtener imagen» o equivalente dentro de la noticia en edición.
+- [x] Mostrar estados de carga, candidatos/resultado, previsualización, selección
   y cancelación sin perder el texto del formulario.
-- [ ] Adjuntar la imagen aceptada y sus metadatos a los campos existentes de `news.image`.
-- [ ] Exigir revisión humana de pertinencia y representación: una ilustración no
+- [x] Adjuntar la imagen aceptada y sus metadatos a los campos existentes de `news.image`.
+- [x] Exigir revisión humana de pertinencia y representación: una ilustración no
   debe presentarse como documentación real del acontecimiento.
-- [ ] Integrar el etiquetado del punto 6 y permitir continuar como borrador si la
+- [x] Integrar el etiquetado del punto 6 y permitir continuar como borrador si la
   obtención falla o no hay una imagen adecuada.
-- [ ] Probar éxito, falta de resultados, cancelación y fallo con proveedores/datos controlados.
+- [x] Probar éxito, falta de resultados, cancelación y fallo con proveedores/datos controlados.
 
 ### Alcance
 
 Resolver una noticia sin imagen dentro del flujo administrativo, incluyendo revisión
-y adjunto. Una obtención sin IA puede cumplir el requisito; no se selecciona un
-proveedor externo ni se añade almacenamiento o credenciales por este documento.
+y adjunto. Se eligió la biblioteca contextual de Commons ya revisada en el proyecto, sin
+descubrimiento remoto en backend, almacenamiento propio ni credenciales nuevas.
 Si se elige generación real, debe respetar el registro de uso y auditoría ya
 definido para esa acción, sin añadir otro frente al alcance seleccionado.
 
 ### Cómo abordarlo
 
-Elegir una sola vía mínima viable y verificar sus derechos/condiciones antes de
-integrarla. Conectar formulario → obtención → previsualización → aceptación → noticia.
-Preparar el contrato de tipo/disclosure del punto 6 antes de permitir resultados IA.
-Las nuevas dependencias o credenciales se deciden en el loop de implementación y
-se sincronizan con configuración, bootstrap y documentación cuando correspondan.
+Flujo implementado: formulario → biblioteca → previsualización → revisión → aceptación → noticia.
+Las fotografías conservan su tipo y sus metadatos. La generación IA nueva no es parte de esta
+vía de obtención y no se ejecutan llamadas a proveedores de IA.
 
 ### Resultado esperado para considerarlo terminado
 
@@ -277,28 +285,37 @@ correctos. Cancelar o fallar conserva su trabajo y ninguna imagen engañosa se a
 
 ## 6. Identificación de imágenes IA
 
+Implementado el 2026-10-30. El panel permite los cinco tipos y exige declaración para IA.
+La API conserva tipo, declaración y coherencia de `imageGenerated`; deja de inferir fotografía
+por existir URL. Tarjetas compactas, principales y detalle muestran naturaleza visual;
+el detalle añade contexto, crédito y derechos. No se reclasifican imágenes históricas.
+Pruebas: `test_editorial_policy.py`, `editorialImages.test.tsx` y revisión web con fixtures.
+La adquisición integrada de imágenes del punto 5 ya utiliza este contrato.
+
+El listado siguiente conserva el desglose original para trazabilidad; las tareas ejecutadas
+en este loop se indican con `[x]`.
+
 ### Lo que se tiene actualmente
 
 - [Image](../../backend/news/models/news.py) admite fotografía, ilustración, generada
   con IA, alterada con IA y ausencia de imagen. Los tipos IA exigen `aiDisclosure`.
 - El contrato de lectura transporta esos campos y el detalle muestra disclosure cuando existe.
-- El formulario no expone tipo/disclosure; la API administrativa sigue clasificando
-  cualquier URL como fotografía. Las tarjetas no presentan un aviso de IA.
+- El formulario y la API exponen tipo/disclosure; las tarjetas presentan el aviso de IA.
 
 ### Lo que falta y tareas que hay que realizar
 
-- [ ] Añadir al formulario el tipo de imagen y la declaración que debe acompañarla.
-- [ ] Incorporar esos datos al request administrativo y conservarlos al crear la noticia.
-- [ ] Reutilizar validaciones canónicas: rechazar tipos IA sin disclosure en backend,
+- [x] Añadir al formulario el tipo de imagen y la declaración que debe acompañarla.
+- [x] Incorporar esos datos al request administrativo y conservarlos al crear la noticia.
+- [x] Reutilizar validaciones canónicas: rechazar tipos IA sin disclosure en backend,
   además de informar el problema en la interfaz.
-- [ ] Mantener coherentes `image.type`, `image.aiDisclosure` y `aiAssistance.imageGenerated`
+- [x] Mantener coherentes `image.type`, `image.aiDisclosure` y `aiAssistance.imageGenerated`
   según el modelo vigente; este último corresponde específicamente a `ai_generated`.
-- [ ] Mostrar un aviso visible y accesible para imágenes generadas o alteradas en
+- [x] Mostrar un aviso visible y accesible para imágenes generadas o alteradas en
   tarjetas compactas, destacadas y detalle, junto con crédito/derechos pertinentes.
-- [ ] Hacer que la obtención del punto 5 conserve el origen conocido, sin deducirlo
+- [x] Hacer que la obtención del punto 5 conserve el origen conocido, sin deducirlo
   únicamente de la URL o la apariencia.
-- [ ] Probar guardado/lectura de los cinco tipos, metadatos incompletos y avisos visibles.
-- [ ] Definir el tratamiento de imágenes antiguas sin procedencia; no reclasificarlas
+- [x] Probar guardado/lectura de los cinco tipos, metadatos incompletos y avisos visibles.
+- [x] Definir el tratamiento de imágenes antiguas sin procedencia; no reclasificarlas
   automáticamente como reales o IA sin evidencia.
 
 ### Alcance
@@ -322,30 +339,34 @@ en detalle. Guardar y recuperar mantiene tipo, declaración y procedencia.
 
 ## 7. Verificación editorial
 
+Implementado el 2026-10-30 con los campos existentes. Política y evidencia en la
+[guía de demostración](transparencia-responsible-ai-demo.md). No modifica noticias históricas
+ni elimina incertidumbre por decisión del modelo.
+
 ### Lo que se tiene actualmente
 
 - Existen estados `confirmed`, `developing`, `insufficient_sources` y `conflicting_sources`.
 - El modelo permite varias fuentes, su procedencia y la afirmación que respaldan.
-- El formulario recoge una fuente opcional, parte de `published`/`confirmed` por
-  defecto y la creación marca revisión humana automáticamente.
-- El detalle y el chat comunican parte de la verificación/incertidumbre; las tarjetas
-  del feed no muestran esos avisos.
+- El formulario recoge múltiples fuentes, afirmaciones respaldadas, fechas y notas; comienza
+  como borrador en desarrollo y requiere revisión explícita para publicar.
+- El servidor aplica la política aunque se omita la interfaz. Feed, detalle y chat comunican
+  incertidumbre y distinguen los aportes IA; el modelo no modifica la verificación.
 
 ### Lo que falta y tareas que hay que realizar
 
-- [ ] Definir una política editorial con ejemplos de los cuatro estados: qué
+- [x] Definir una política editorial con ejemplos de los cuatro estados: qué
   respaldo permite confirmar y qué hacer ante ausencia, insuficiencia o contradicción.
-- [ ] Permitir registrar varias fuentes y utilizar `supports`/notas para explicar
+- [x] Permitir registrar varias fuentes y utilizar `supports`/notas para explicar
   qué afirmación está respaldada y qué sigue sin resolverse.
-- [ ] Quitar la confirmación implícita como decisión editorial: solicitar revisión
+- [x] Quitar la confirmación implícita como decisión editorial: solicitar revisión
   explícita antes de publicar como confirmada, según la política acordada.
-- [ ] Distinguir guardar borrador de publicar y aplicar la política también en servidor,
+- [x] Distinguir guardar borrador de publicar y aplicar la política también en servidor,
   evitando que pueda omitirse al enviar el request directamente.
-- [ ] Guardar autor/revisor reales y registrar `humanReviewed` solo cuando corresponda
+- [x] Guardar autor/revisor reales y registrar `humanReviewed` solo cuando corresponda
   a una revisión efectuada; declarar aportes IA de resumen/temas/imagen cuando existan.
-- [ ] Mostrar estados inciertos, fuentes y declaraciones pertinentes en feed y detalle;
+- [x] Mostrar estados inciertos, fuentes y declaraciones pertinentes en feed y detalle;
   mantener citas solo de publicaciones y confianza basada en datos en el chat.
-- [ ] Probar fuente primaria suficiente, respaldo insuficiente, fuentes contradictorias,
+- [x] Probar fuente primaria suficiente, respaldo insuficiente, fuentes contradictorias,
   noticia en desarrollo y contenido asistido por IA.
 
 ### Alcance
