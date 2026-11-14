@@ -1,5 +1,5 @@
 pydantic>=2.12,<3
-pymongo>=4.13,<5
+pymongo>=4.19.0,<5
 python-dotenv>=1.1,<2
 fastapi>=0.125,<1
 uvicorn[standard]>=0.38,<1
