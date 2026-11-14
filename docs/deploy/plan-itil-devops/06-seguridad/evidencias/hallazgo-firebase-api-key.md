@@ -95,7 +95,7 @@ evaluó el riesgo, se preparó la reversa y lo autorizó el responsable del serv
 | Plan de reversa | Respaldo de las restricciones anteriores (27 APIs, sin restricción de aplicación) tomado con `gcloud services api-keys describe` antes del cambio; se restauran con `gcloud services api-keys update` |
 | Autorización | Mathew Cordero, responsable de Firebase y del proyecto de Google Cloud, 13 de noviembre de 2026 |
 | Implementación | Josué Say, 13 de noviembre de 2026, con `gcloud services api-keys update`: aplicación Android `com.aina.news` + SHA-1 del certificado de firma (tomado de `google-services.json`), y APIs limitadas a `identitytoolkit`, `securetoken` y `firebaseinstallations` |
-| Verificación | `gcloud services api-keys describe` muestra 1 aplicación Android permitida y 3 APIs. Pendiente: probar el inicio de sesión con Google en el APK |
+| Verificación | `gcloud services api-keys describe` muestra 1 aplicación Android permitida y 3 APIs. Después del cambio, el inicio de sesión con Google funciona en la web y en el APK de Android (Figuras 4 a 7) |
 | Cierre | Alerta #1 de secret scanning cerrada como «won't fix» el 13 de noviembre de 2026, con la justificación de este documento. Secret scanning queda sin alertas abiertas |
 
 | Control | Antes | Después |
@@ -106,3 +106,19 @@ evaluó el riesgo, se preparó la reversa y lo autorizó el responsable del serv
 ![Alerta #1 cerrada como won't fix](secret-scanning-despues-alerta-cerrada.png)
 
 *Figura 3. Alerta #1 cerrada como «won't fix» y secret scanning sin alertas abiertas. En la captura se ocultó el valor de la key.*
+
+![Sesión iniciada en la web después de restringir la key](login-web-despues-restriccion.png)
+
+*Figura 4. Web con sesión iniciada después del cambio. Usa la Browser key, que no se modificó.*
+
+![Pantalla de inicio del APK](login-android-1-inicio.png)
+
+*Figura 5. APK de Android: inicio de sesión con Google.*
+
+![Selector de cuenta de Google en Android](login-android-2-elegir-cuenta.png)
+
+*Figura 6. Selector de cuenta de Google en el APK. Se ocultaron las cuentas.*
+
+![Sesión iniciada en el APK](login-android-3-sesion-iniciada.png)
+
+*Figura 7. APK con sesión iniciada después del cambio.*

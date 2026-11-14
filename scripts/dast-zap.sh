@@ -38,9 +38,10 @@ for attempt in $(seq 1 30); do
   sleep 2
 done
 
-docker run --rm -d --name "$api" --network "$network" "${api_env[@]}" "$image" >/dev/null
+# Alias fijo: los reportes muestran news-api y no el nombre temporal del contenedor.
+docker run --rm -d --name "$api" --network "$network" --network-alias news-api "${api_env[@]}" "$image" >/dev/null
 for attempt in $(seq 1 30); do
-  docker run --rm --network "$network" curlimages/curl:8.17.0 -fsS "http://$api:8020/health" \
+  docker run --rm --network "$network" curlimages/curl:8.17.0 -fsS "http://news-api:8020/health" \
     >/dev/null 2>&1 && break
   [ "$attempt" -eq 30 ] && { echo "La API no respondió /health." >&2; exit 1; }
   sleep 2
@@ -49,7 +50,7 @@ done
 rm -rf "$report_dir" && mkdir -p "$report_dir" && chmod 777 "$report_dir"
 # -I: las advertencias no detienen el script; el criterio de corte se aplica abajo.
 docker run --rm --network "$network" -v "$report_dir:/zap/wrk:rw" "$zap_image" \
-  zap-api-scan.py -t "http://$api:8020/openapi.json" -f openapi \
+  zap-api-scan.py -t "http://news-api:8020/openapi.json" -f openapi \
   -r zap-report.html -J zap-report.json -I
 
 python3 - "$report_dir/zap-report.json" <<'EOF'
