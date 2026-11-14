@@ -9,6 +9,7 @@
 - **Conventional Commits.** La regla está escrita en `AGENTS.md`: *«Usar Conventional Commits siguiendo el estilo existente del repositorio»*. Se usan los tipos `feat`, `fix`, `docs` y `chore`, con alcance cuando aplica: `feat(deploy)`, `feat(news)`.
 - **Todo como código.** Infraestructura (`docker-compose.yml`, `Makefile`, `deploy/gcp/`, `deploy/firebase/`), decisiones de arquitectura (ADR `docs/decisions/0001-api-principal-y-seguridad.md`), diagramas en Mermaid y el contrato API-frontend (`make news-contract-check`) viven en el repositorio.
 - **Secretos fuera del historial.** `.gitignore` excluye `keys/*` y todos los `.env`, salvo la plantilla `.env.example`.
+- **`main` protegida.** Desde el 13 de noviembre de 2026, el ruleset `main-protegida` exige pull request con una aprobación de otra persona, revisión de code owners, conversaciones resueltas y los checks de `security`, `test` y `frontend` en verde, y bloquea force push y borrado. Detalle y evidencias en [6 Gestión de seguridad](../06-seguridad/README.md#protección-de-main).
 
 ```mermaid
 gitGraph
@@ -46,8 +47,8 @@ Brechas detectadas:
 
 - **Sin tags ni releases.** No se puede volver a «la versión entregada» por nombre.
 - **Convención aplicada de forma parcial.** Hay commits fuera del formato, por ejemplo «FINAL», «FIX Caida», «USE DE FEED» y «[FEAT] …».
-- **`main` no está protegida.** El cambio de la rama `firebase` («FIX Caida») entró a `main` con un merge local («FINAL», 30 de octubre) sin pull request ni revisión de otro integrante, como muestra la Figura 1.
-- **Ramas ya integradas sin borrar:** `feat/database-seeding-and-automation` y `firebase`.
+- **`main` no estaba protegida (resuelta).** El cambio de la rama `firebase` («FIX Caida») entró a `main` con un merge local («FINAL», 30 de octubre) sin pull request ni revisión de otro integrante, como muestra la Figura 1. Se cerró el 13 de noviembre con el ruleset `main-protegida`.
+- **Ramas ya integradas sin borrar:** `feat/database-seeding-and-automation` y `firebase`. El borrado automático de ramas al integrar ya está activo, así que solo quedan estas dos.
 
 **Responsable y fecha:** José Luis Gramajo · 13 de noviembre de 2026
 
@@ -89,7 +90,7 @@ keys/*
 | Prioridad | Mejora | Cómo |
 |:---:|---|---|
 | 1 | Etiquetar la entrega con SemVer | `git tag -a v1.0.0 -m "Entrega Proyecto Final"` y `git push origin v1.0.0`; luego publicar un GitHub Release. El workflow solo se dispara con push a `main`, así que el tag no redespliega. |
-| 2 | Proteger `main` | Exigir pull request, una aprobación y el pipeline en verde antes de permitir el merge. |
+| 2 | Proteger `main` | Implementado con el ruleset `main-protegida` (ver «Prácticas aplicadas»). |
 | 3 | Automatizar la convención | commitlint con un hook de husky que valide el formato antes de cada commit. |
 | 4 | CHANGELOG automático | Generarlo desde los Conventional Commits, por ejemplo con release-please. |
-| 5 | Limpieza de ramas | Borrar las ramas integradas y activar *Automatically delete head branches*. |
+| 5 | Limpieza de ramas | Borrar `feat/database-seeding-and-automation` y `firebase`. *Automatically delete head branches* ya está activo. |
