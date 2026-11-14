@@ -1,0 +1,9 @@
+periodo,concepto,usd_sin_redondear
+2026-10,Networking neto,2.141011
+2026-10,Cloud Run neto,0.000000
+2026-10,App Engine neto,0.005789
+2026-10,Compute Engine neto,0.001498
+2026-10,Cloud Run bruto,0.072576
+2026-10,Crédito Cloud Run,-0.072576
+2026-10,Ajuste de redondeo,0.001702
+2026-10,Total factura,2.150000
