@@ -1,25 +1,46 @@
 # Actualizaciones de dependencias (docs/deploy/plan-itil-devops/06-seguridad/).
 # Solo tiene efecto cuando este archivo está en main.
+# Un PR agrupado por ecosistema para cambios menores y parches. Los saltos de versión
+# mayor (SDK de Expo, Python, Node) se planifican aparte con pruebas. Las
+# actualizaciones de seguridad no dependen de estas reglas y siguen abriéndose.
 version: 2
 updates:
   - package-ecosystem: pip
     directories: [/backend/news, /backend/assistant]
     schedule:
       interval: weekly
-    open-pull-requests-limit: 5
+    groups:
+      python:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: [version-update:semver-major]
 
   - package-ecosystem: npm
     directory: /frontend
     schedule:
       interval: weekly
-    open-pull-requests-limit: 5
+    groups:
+      frontend:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: [version-update:semver-major]
 
+  # Las imágenes base solo reciben parches; cambiar de Python 3.13 o Node 24 es una
+  # decisión del equipo.
   - package-ecosystem: docker
     directories: [/backend/news, /backend/assistant, /frontend]
     schedule:
       interval: weekly
+    ignore:
+      - dependency-name: "*"
+        update-types: [version-update:semver-major, version-update:semver-minor]
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
