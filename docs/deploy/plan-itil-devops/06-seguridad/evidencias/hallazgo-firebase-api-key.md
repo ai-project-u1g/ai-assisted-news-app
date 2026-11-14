@@ -37,7 +37,7 @@ lectura:
 | --- | --- |
 | Restricción de aplicación (paquete Android + SHA-1) | Ninguna: `androidKeyRestrictions: {}` |
 | Restricción de APIs | 27 APIs de Firebase y Google Cloud, entre ellas `identitytoolkit`, `securetoken`, `firestore`, `firebasestorage`, `sqladmin` y `logging` |
-| Uso en la app | El archivo configura Google Sign-In en Android (`GoogleOneTapSignIn.configure({ webClientId: "autoDetect" })` en `frontend/src/services/androidGoogleSignIn.android.ts`). Firebase Authentication en JavaScript usa otra key, la de la app web (`EXPO_PUBLIC_FIREBASE_API_KEY`) |
+| Uso en la app | El archivo configura Google Sign-In en Android (`GoogleOneTapSignIn.configure({ webClientId: "autoDetect" })` en `frontend/src/services/androidGoogleSignIn.android.ts`). Firebase Authentication en JavaScript usa otra key: `EXPO_PUBLIC_FIREBASE_API_KEY` corresponde a la «Browser key (auto created by Firebase)», verificado con `gcloud services api-keys lookup`. La app no incluye un SDK nativo de Firebase que use la key de Android |
 
 Conclusión: no se trata de una credencial privilegiada filtrada. Sin embargo, la key está más
 abierta de lo necesario: aunque la app no la use para autenticar, quien la copie del repositorio
@@ -53,6 +53,16 @@ cualquier cliente.
 | Métricas de uso de la key (APIs y servicios > Credenciales > key > Métricas) desde el 21 de octubre | Mathew Cordero | Pendiente |
 | Usuarios de Firebase Authentication desconocidos | Mathew Cordero | Pendiente |
 | Cargos inesperados en facturación del proyecto | Mathew Cordero | Pendiente |
+
+## Evidencias
+
+![Alerta #1 de secret scanning con el valor oculto](secret-scanning-antes-alerta.png)
+
+*Figura 1. Alerta de secret scanning sobre `frontend/google-services.json:31`. En la captura se ocultó el valor de la key.*
+
+![Restricciones de la Android key en Google Cloud](firebase-key-antes-restricciones.png)
+
+*Figura 2. Android key antes de la corrección: restricción de aplicaciones «Ninguno» y aviso de Google Cloud recomendando restringirla.*
 
 ## Decisión
 
