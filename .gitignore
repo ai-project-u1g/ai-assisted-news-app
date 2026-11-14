@@ -130,3 +130,6 @@ app.*.symbols
 .firebaserc
 firebase-debug*.log
 gha-creds-*.json
+
+# Reportes locales del escaneo DAST (scripts/dast-zap.sh)
+dast-report/
