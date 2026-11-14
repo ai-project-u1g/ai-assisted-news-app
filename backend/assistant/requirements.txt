@@ -1,5 +1,5 @@
 fastapi>=0.162.4,<1
-openai>=2,<3
+openai>=3.49.0,<4
 pymongo>=4.19.0,<5
 python-dotenv>=1.2.4,<2
 uvicorn[standard]>=0.54.0,<1
