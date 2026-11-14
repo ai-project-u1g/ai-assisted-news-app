@@ -47,8 +47,11 @@ flowchart LR
 
 - En un PR solo corren `test` y `frontend`. El job `deploy` exige `refs/heads/main` y un evento
   distinto de `pull_request`.
-- `concurrency: deploy-${{ github.ref }}` con `cancel-in-progress: false`: dos pushes seguidos a
-  `main` se encolan, no se cancelan ni se pisan.
+- `concurrency: deploy-${{ github.ref }}` con `cancel-in-progress: false`: nunca se interrumpe un
+  despliegue en curso. GitHub guarda solo una ejecución en espera por grupo: si llegan más pushes
+  mientras uno despliega, la espera anterior se cancela y solo se publica el commit más reciente.
+  Ocurrió después del corte de esta línea base: los runs 73, 74, 76 y 83 se cancelaron sin iniciar
+  ningún job.
 - Si falla cualquier paso, los siguientes no corren. No hay rollback automático.
 
 ## Configuración de GitHub y Google Cloud
@@ -87,10 +90,11 @@ flowchart LR
 Antes de la automatización, un integrante publicó Hosting a mano dos veces el 20 de octubre (20:30
 y 20:45). Desde el run 4, todas las publicaciones del sitio las hace la cuenta `gh-deployer`.
 
-Los runs 6 y 7 fallaron en el mismo commit y el run 8 pasó sin cambios de código. El paso falló
-antes de llamar a EAS, que es el comportamiento de `deploy/expo/build-ci.sh` cuando falta
-`EXPO_TOKEN`. La causa más probable es que el secreto se agregó al entorno entre el run 7 y el 8;
-los logs completos requieren permisos de escritura en el repositorio.
+Los runs 6 y 7 fallaron en el mismo commit y el run 8 pasó sin cambios de código. El log del run 6
+muestra la causa: `deploy/expo/build-ci.sh` se detuvo antes de llamar a EAS con «Falta EXPO_TOKEN
+en los secretos del entorno production de GitHub» y `make` terminó con exit code 2. El secreto se
+agregó al entorno entre el run 7 y el 8. La validación funcionó como se diseñó: el pipeline se
+detuvo antes de autenticarse con Google Cloud y no publicó nada a medias.
 
 ## Indicadores
 
@@ -171,20 +175,25 @@ integrado. Las acciones se referencian por etiqueta mayor y no por SHA.
   renueva antes de Hosting.
 - `check-ci-config.sh` valida la configuración antes de tocar la nube.
 - Las pruebas de backend, frontend y scripts deben pasar antes de cualquier publicación.
-- Los despliegues de `main` se encolan sin cancelarse (runs 12/13 y 40/45).
+- Un despliegue en curso nunca se interrumpe; el siguiente espera a que termine (runs 12/13 y
+  40/45).
 - El sitio, el APK y los backends salen del mismo commit: Hosting resuelve las URLs de Cloud Run
   recién desplegadas y el enlace del APK recién construido.
 
-## Evidencias gráficas pendientes
+## Evidencias gráficas
 
-Capturas a agregar en esta carpeta, con secretos y valores ocultos:
+Capturas en esta carpeta, con secretos ocultos. Se tomaron después del corte de esta línea base, así
+que pueden mostrar runs, revisiones y releases posteriores a `1b328e5`.
 
-| Archivo sugerido | Qué mostrar |
+| Archivo | Qué muestra |
 | --- | --- |
-| `github-cd-antes-entorno-production.png` | Settings → Environments → `production`: regla de rama y ausencia de revisores |
-| `github-cd-antes-run-exitoso.png` | Actions → deploy → run 40: los tres jobs y los pasos del job `deploy` con duraciones |
-| `github-cd-antes-run-fallido.png` | Actions → deploy → run 6: falla en «Generar APK» |
-| `github-cd-antes-deployments.png` | Deployments → `production`: historial de despliegues |
-| `gcp-cd-antes-cloud-run-revisiones.png` | Cloud Run → `news-api` → Revisiones, con la imagen etiquetada por commit |
-| `firebase-cd-antes-hosting-releases.png` | Hosting → historial de releases |
-| `app-cd-antes-funcionando.png` | Sitio publicado con feed y chat |
+| `github-cd-antes-entorno-production.png` | Settings → Environments → `production`: sin revisores, bypass de administradores, solo `main` y el secreto `EXPO_TOKEN` |
+| `github-cd-antes-run-exitoso.png` | Run 40: pasos del job `deploy` (12m 27s), con el APK en 9m 38s |
+| `github-cd-antes-run-fallido.png` | Run 6: «Falta EXPO_TOKEN en los secretos del entorno production de GitHub» |
+| `github-cd-antes-deployments.png` | Deployments → `production`: historial, incluidos los dos fallos del 21 de octubre |
+| `gcp-cd-antes-cloud-run-revisiones.png` | Cloud Run → `news-api` → Historial de revisión: 12 revisiones conservadas, publicadas por `gh-deployer` |
+| `app-cd-antes-funcionando.png` | Sitio publicado con el feed |
+
+La captura del historial de releases de Firebase Hosting no se tomó porque quien preparó las
+evidencias no tiene acceso a la consola de Firebase. Ese historial está en este documento, obtenido
+de la API de Hosting (sección «Historial de despliegues en `main`»).

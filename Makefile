@@ -3,11 +3,11 @@
 .PHONY: chatbot-stub chatbot-api chatbot-openai chatbot-config-test
 .PHONY: db-news-images-check
 .PHONY: gcp-bootstrap gcp-secrets gcp-deploy
-.PHONY: deploy-test firebase-check-config firebase-deploy android-apk android-apk-ci
+.PHONY: deploy-test deploy-smoke firebase-check-config firebase-deploy android-apk android-apk-ci
 
 # El .env local de Compose puede contener localhost y otro proyecto Firebase.
 # Los comandos cloud usan el entorno/config.sh y el frontend usa sus propios .env.
-CLOUD_TARGETS := gcp-bootstrap gcp-secrets gcp-deploy firebase-check-config firebase-deploy deploy-test android-apk android-apk-ci
+CLOUD_TARGETS := gcp-bootstrap gcp-secrets gcp-deploy firebase-check-config firebase-deploy deploy-test deploy-smoke android-apk android-apk-ci
 ifneq ($(filter $(CLOUD_TARGETS),$(MAKECMDGOALS)),)
 ifneq ($(filter-out $(CLOUD_TARGETS),$(MAKECMDGOALS)),)
 $(error Ejecuta las tareas locales y cloud en comandos make separados)
@@ -241,6 +241,10 @@ gcp-deploy:
 
 deploy-test:
 	@python3 -m unittest discover -s tests/unit -p test_deploy_scripts.py -v
+
+# Verificación de solo lectura del despliegue publicado. TAG = sha corto desplegado.
+deploy-smoke:
+	@bash deploy/smoke-test.sh
 
 firebase-check-config:
 	@bash deploy/firebase/hosting.sh --check

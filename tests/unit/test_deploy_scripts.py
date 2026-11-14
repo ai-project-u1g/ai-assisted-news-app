@@ -321,6 +321,65 @@ class DeploymentTests(unittest.TestCase):
                         "deploy", "--only", "hosting", "--project", "auth-test", "--config", "firebase.json", "--non-interactive",
                     ])
 
+    def test_smoke_test_checks_commit_image_health_and_site_read_only(self):
+        for outcome in ("ok", "old-image", "not-ready", "pinned-traffic", "degraded", "site-down", "lookup-fails"):
+            with self.subTest(outcome=outcome), tempfile.TemporaryDirectory() as directory:
+                temporary = Path(directory)
+                calls = temporary / "calls.jsonl"
+                summary = temporary / "summary.md"
+                for name in ("gcloud", "curl"):
+                    executable = temporary / name
+                    executable.write_text(
+                        "#!/usr/bin/env python3\n"
+                        "import json, os, sys\n"
+                        "name = os.path.basename(sys.argv[0])\n"
+                        "outcome = os.environ['SMOKE_OUTCOME']\n"
+                        "with open(os.environ['DEPLOY_TEST_CALLS'], 'a') as output:\n"
+                        "    output.write(json.dumps([name] + sys.argv[1:]) + '\\n')\n"
+                        "if name == 'gcloud':\n"
+                        "    if outcome == 'lookup-fails': sys.exit(1)\n"
+                        "    service = sys.argv[4]\n"
+                        "    tag = 'old1234' if outcome == 'old-image' else 'abc1234'\n"
+                        "    new, old = f'{service}-00002-new', f'{service}-00001-old'\n"
+                        "    print(json.dumps({\n"
+                        "        'spec': {'template': {'spec': {'containers': [{'image': f'registry.test/ai-news/{service}:{tag}'}]}}},\n"
+                        "        'status': {'url': f'https://{service}.example.test', 'latestCreatedRevisionName': new,\n"
+                        "                   'latestReadyRevisionName': old if outcome == 'not-ready' else new,\n"
+                        "                   'traffic': [{'revisionName': old if outcome in ('not-ready', 'pinned-traffic') else new,\n"
+                        "                                'percent': 100, 'latestRevision': outcome != 'pinned-traffic'}]}}))\n"
+                        "else:\n"
+                        "    url = sys.argv[-1]\n"
+                        "    if url.endswith('/health'):\n"
+                        "        print(json.dumps({'status': 'degraded' if outcome == 'degraded' else 'ok'}))\n"
+                        "    elif outcome == 'site-down':\n"
+                        "        sys.exit(22)\n"
+                    )
+                    executable.chmod(0o755)
+                result = subprocess.run(
+                    ["bash", "deploy/smoke-test.sh"], cwd=ROOT,
+                    env={
+                        **os.environ,
+                        "PATH": f"{directory}:{os.environ['PATH']}",
+                        "DEPLOY_TEST_CALLS": str(calls),
+                        "SMOKE_OUTCOME": outcome,
+                        "PROJECT_ID": "cloud-test",
+                        "NEWS_FIREBASE_PROJECT_ID": "auth-test",
+                        "TAG": "abc1234",
+                        "GITHUB_STEP_SUMMARY": str(summary),
+                    }, text=True, capture_output=True, check=False,
+                )
+                self.assertEqual(result.returncode == 0, outcome == "ok", result.stdout + result.stderr)
+                commands = [json.loads(line) for line in calls.read_text().splitlines()]
+                for command in commands:
+                    if command[0] == "gcloud":
+                        self.assertEqual(command[1:4], ["run", "services", "describe"])
+                self.assertIn("https://auth-test.web.app/", [command[-1] for command in commands if command[0] == "curl"])
+                report = summary.read_text()
+                for service in ("news-api", "news-chatbot"):
+                    self.assertIn(f"`{service}`", report)
+                if outcome == "ok":
+                    self.assertEqual(report.count("| OK |"), 3)
+
 
 if __name__ == "__main__":
     unittest.main()

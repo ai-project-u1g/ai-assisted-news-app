@@ -83,6 +83,13 @@ la documentación de `06-seguridad/`. Los escáneres nunca leen `keys/` ni archi
 los reportes no reproducen valores secretos. Los cambios de configuración del repositorio en
 GitHub o de la nube se coordinan antes con el equipo.
 
+Excepción autorizada por decisión humana (2026-11-13): para el apartado de despliegue continuo
+del mismo plan (`02-cd/`) se permite ajustar `.github/workflows/deploy.yml` y los scripts de
+`deploy/` con controles livianos (filtro de rutas, verificación de solo lectura después de
+publicar), sus tests y la documentación de `02-cd/` y `docs/deploy/`. No se agregan reglas que
+bloqueen a otros integrantes (protección de ramas, aprobaciones obligatorias) sin acuerdo del
+equipo, y el pipeline sigue sin cambiar IAM, secretos ni esquemas de base de datos.
+
 ---
 
 ## Separación del assistant existente

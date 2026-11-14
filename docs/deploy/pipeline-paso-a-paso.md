@@ -115,7 +115,9 @@ En **GitHub → Actions → deploy**, abre la ejecución del push a `main`.
    obtener su URL; después autentica por WIF.
 4. **Publicar API y chatbot en Cloud Run** debe terminar correctamente.
 5. **Publicar frontend en Firebase Hosting** debe terminar con `Deploy complete!`.
-6. Abre `https://adfasdfasfd-1899a.web.app` y prueba login, feed y chat.
+6. **Verificar servicios publicados** debe mostrar `OK` en los tres componentes. La tabla
+   queda en el resumen del run, con la revisión y la imagen de cada servicio.
+7. Abre `https://adfasdfasfd-1899a.web.app` y prueba login, feed y chat.
 
 La automatización queda verificada cuando pasa una ejecución real completa y el
 sitio funciona. Los tests locales de scripts usan CLIs simuladas; no verifican
@@ -124,15 +126,52 @@ por sí solos la configuración IAM o las variables externas.
 ## 6. Uso habitual después de activarlo
 
 ```text
-cambio → commit → push → PR → pruebas → merge a main → APK → backend → Hosting con APK nuevo
+cambio → commit → push → PR → pruebas → merge a main → APK → backend → Hosting con APK nuevo → verificación
 ```
 
 Si falla una prueba o el APK, no se publica. Si falla el deploy backend, no se publica
 Hosting. Los dos servicios y Hosting son despliegues secuenciales: un fallo
 intermedio puede dejar alguno actualizado; no existe rollback conjunto automático.
+Si la verificación final falla, lo publicado queda en línea y el run queda en rojo
+para avisar al equipo; sigue [Volver a una versión anterior](#volver-a-una-versión-anterior).
+
+Un push a `main` que solo cambia documentación (`docs/`, archivos `.md` de la raíz,
+`backend/loops/`) o archivos de los controles de seguridad no publica nada. La lista
+está en `paths-ignore` de `.github/workflows/deploy.yml`; basta un archivo fuera de
+ella para desplegar.
 
 Para repetir una publicación sin cambios, usa **Actions → deploy → Run workflow**
-seleccionando `main`. Los comandos Make manuales siguen disponibles.
+seleccionando `main`. Los comandos Make manuales siguen disponibles. Para revisar
+lo que está publicado sin cambiar nada:
+
+```bash
+make deploy-smoke PROJECT_ID=adfasdfasfd-1899a REGION=us-east4 TAG=<sha corto desplegado>
+```
+
+## Volver a una versión anterior
+
+Úsalo cuando un despliegue deja la app fallando y la corrección no es inmediata.
+Requiere acceso al proyecto de Google Cloud y, para Hosting, a Firebase.
+
+**Opción recomendada: revertir el commit.** Abre un PR con `git revert <sha>` y haz
+merge. El pipeline vuelve a publicar los tres componentes desde el mismo commit, con
+pruebas y verificación incluidas. Tarda lo mismo que un despliegue normal, unos 14 min.
+
+**Opción rápida, solo backend:** Cloud Run conserva las revisiones anteriores. Mueve
+el tráfico de los dos servicios a las revisiones del mismo commit anterior:
+
+```bash
+gcloud run revisions list --service news-api --project "$PROJECT_ID" --region "$REGION"
+gcloud run services update-traffic news-api --to-revisions <revisión>=100 --project "$PROJECT_ID" --region "$REGION"
+gcloud run services update-traffic news-chatbot --to-revisions <revisión>=100 --project "$PROJECT_ID" --region "$REGION"
+```
+
+Mientras el tráfico quede fijado así, los despliegues siguientes crean revisiones sin
+tráfico. Cuando la corrección llegue a `main`, devuelve el tráfico a la última versión
+con `gcloud run services update-traffic <servicio> --to-latest` en los dos servicios.
+
+**Hosting:** en la consola de Firebase, **Hosting → Historial de versiones**, elige el
+release anterior y usa **Revertir**.
 
 Los cambios de secretos se cargan mediante `make gcp-secrets CHATBOT_PROVIDER=openai`
 antes de volver a desplegar. Los cambios de esquema DB siguen su procedimiento
@@ -148,3 +187,4 @@ revisado e independiente; el pipeline no hace reseeds ni migraciones.
 | No encuentra los servicios Cloud Run | Confirmar `GCP_PROJECT_ID`, `GCP_REGION=us-east4` y nombres de servicio |
 | Se queda esperando aprobación | Revisar las reglas de protección del entorno `production` |
 | Publica backend pero falla Hosting | Corregir el paso fallido y repetir el workflow completo; revisar el sitio después |
+| Falla **Verificar servicios publicados** | El resumen del run indica qué componente falló. `Imagen distinta` = el último despliegue de ese servicio no fue de este commit; `La revisión nueva no arrancó` = Cloud Run la rechazó y sigue sirviendo la anterior (revisar sus logs); `/health` = el servicio no conecta con MongoDB; sitio = Hosting no responde. Corregir o volver a una versión anterior |
