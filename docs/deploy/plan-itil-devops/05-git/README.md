@@ -5,7 +5,7 @@
 **Prácticas aplicadas:**
 
 - **Flujo de ramas GitHub Flow.** `main` es la rama estable y la única que publica a producción (Cloud Run y Firebase Hosting). Cada funcionalidad se desarrolla en una rama propia, por ejemplo `feat/news-chat`, `feat/database-seeding-and-automation` y `firebase`.
-- **Integración por pull request.** Los cambios entran a `main` mediante PR. El pipeline (`.github/workflows/deploy.yml`) ejecuta todas las pruebas en cada PR, y el despliegue ocurre únicamente después de integrar a `main`.
+- **Integración por pull request.** Los cambios entran a `main` mediante PR. Los workflows de `deploy` y `security` ejecutan las pruebas y controles en cada PR; el despliegue ocurre únicamente después de integrar a `main`.
 - **Conventional Commits.** La regla está escrita en `AGENTS.md`: *«Usar Conventional Commits siguiendo el estilo existente del repositorio»*. Se usan los tipos `feat`, `fix`, `docs` y `chore`, con alcance cuando aplica: `feat(deploy)`, `feat(news)`.
 - **Todo como código.** Infraestructura (`docker-compose.yml`, `Makefile`, `deploy/gcp/`, `deploy/firebase/`), decisiones de arquitectura (ADR `docs/decisions/0001-api-principal-y-seguridad.md`), diagramas en Mermaid y el contrato API-frontend (`make news-contract-check`) viven en el repositorio.
 - **Secretos fuera del historial.** `.gitignore` excluye `keys/*` y todos los `.env`, salvo la plantilla `.env.example`.
@@ -32,6 +32,13 @@ gitGraph
 *Diagrama simplificado del flujo de ramas. El historial completo está en las Figuras 1 y 2.*
 
 **Decisión:** Elegimos GitHub Flow porque el proyecto tiene un solo entorno productivo y despliega de forma continua desde `main`. Git Flow agrega ramas `develop` y `release` que solo se justifican cuando hay varias versiones en paralelo, y aquí habrían sumado pasos sin beneficio. Conventional Commits deja un historial legible y permite generar después el CHANGELOG y las versiones SemVer de forma automática.
+
+## Cómo se integra un pull request
+
+1. La persona autora trabaja en una rama propia, registra sus cambios y abre un PR hacia `main` con un resumen de lo realizado. No escribe directamente en `main`.
+2. GitHub ejecuta los checks automáticos del PR. Las pruebas y los controles de seguridad obligatorios deben terminar en verde. Si falla alguno, la persona autora corrige el cambio y espera una nueva ejecución.
+3. Una persona distinta de quien abrió el PR revisa los cambios y registra su decisión en **Submit review**: **Approve** si los acepta o **Request changes** si solicita correcciones. Un comentario sin revisión formal no cuenta como aprobación. Si solicita cambios, la persona autora los aplica y el PR vuelve a pasar por checks y revisión; la aprobación debe corresponder al último push. También deben quedar resueltas las conversaciones y cumplirse la revisión de code owners cuando aplique.
+4. Con los checks obligatorios en verde y la aprobación válida, la persona revisora integra el PR mediante **Merge pull request**. Solo entonces el cambio llega a `main`; el despliegue se ejecuta si el cambio incluye archivos que llegan a producción. El ruleset `main-protegida` impide el push directo y el merge sin cumplir estos requisitos.
 
 **Estado y resultado** (al 13 de noviembre de 2026):
 
@@ -71,6 +78,12 @@ Brechas detectadas:
 *Figura 3. Pestaña Pull requests (captura tomada antes de integrar el PR #11).*
 
 Ejemplos de PR integrados: [#10 Completado apk](https://github.com/ai-project-u1g/ai-assisted-news-app/pull/10) · [#11 Estructura del plan ITIL y DevOps](https://github.com/ai-project-u1g/ai-assisted-news-app/pull/11)
+
+*Opciones para registrar la revisión de un PR:*
+
+![PR #53 con el formulario Finish your review y las opciones Comment, Approve y Request changes](evidencias/datos_pr.png)
+
+*Figura 4. El PR #53, abierto por G2309 hacia `main`, muestra el formulario **Finish your review**. La opción seleccionada en la captura es **Comment**, que solo envía comentarios; para registrar la decisión, otra persona debe elegir **Approve** o **Request changes** y pulsar **Submit review**. La barra de checks aún muestra trabajo en curso, y la imagen no muestra una aprobación enviada ni un merge.*
 
 *Secretos excluidos (`.gitignore`):*
 
