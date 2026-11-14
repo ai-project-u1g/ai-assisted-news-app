@@ -143,23 +143,4 @@ verificación muestre `OK`. Si no, sigue el procedimiento para volver atrás.
 
 *Figura 6. Sitio publicado en Firebase Hosting.*
 
-### Después del merge
 
-Capturas a agregar cuando se integre el PR:
-
-| Archivo sugerido | Qué mostrar |
-| --- | --- |
-| `github-cd-despues-verificacion.png` | Resumen de un run de `deploy` con la tabla de verificación en `OK` |
-| `github-cd-despues-push-docs.png` | Un push a `main` que solo cambia `docs/` sin run de `deploy` en Actions |
-
-## Propuesta de mejora
-
-| Prioridad | Mejora | Cómo |
-| :---: | --- | --- |
-| 1 | Proteger `main` | Al cerrar la entrega, junto con el apartado 6: PR obligatorio y checks de `deploy` y `security` en verde |
-| 2 | Construir el APK solo cuando cambia el frontend | El APK ocupa cerca del 70 % del lead time. Separarlo en otro job condicionado a `frontend/**` y conservar el enlace anterior cuando no cambia |
-| 3 | Política de limpieza en Artifact Registry | Conservar las últimas 10 versiones de cada imagen. Hoy guarda 19 por imagen y 683 MB, por encima de los 0,5 GB sin costo. Es un cambio de configuración en la nube: se coordina con el equipo |
-| 4 | Publicar sin tráfico y promover después de verificar | `gcloud run deploy --no-traffic`, verificar la revisión por su URL de etiqueta y solo entonces moverle el tráfico. Evita que un usuario vea una versión que falla |
-| 5 | Entorno de vista previa | Canales de vista previa de Firebase Hosting por PR para revisar el frontend antes de `main` |
-| 6 | Actualizar las acciones de despliegue | `auth@v3`, `setup-gcloud@v3`, `checkout` y `setup-node` nuevos, por el aviso de Node.js 20 obsoleto. Dependabot ignora los saltos mayores de acciones, así que se planifica y se prueba en una rama |
-| 7 | Alertas en ejecución | Uptime checks de Cloud Monitoring sobre `/health` para detectar caídas entre despliegues |
