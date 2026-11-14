@@ -1,6 +1,6 @@
 # Contexto de build: backend/ (ver docker-compose.yml). El modo news reutiliza
 # los modelos y la configuración de backend/news.
-FROM python:3.13-slim AS base
+FROM python:3.15-slim AS base
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
