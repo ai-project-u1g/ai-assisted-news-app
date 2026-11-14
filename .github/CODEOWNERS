@@ -1,0 +1,11 @@
+# Responsables de revisar los cambios en archivos sensibles.
+# Con el ruleset de main, un PR que toque estas rutas requiere la aprobación de uno de ellos.
+/.github/                     @JosueSay @donmatthiuz
+/deploy/                      @donmatthiuz @JosueSay
+/docker-compose.yml           @donmatthiuz @JosueSay
+/backend/news/Dockerfile      @donmatthiuz @JosueSay
+/backend/assistant/Dockerfile @donmatthiuz @JosueSay
+/SECURITY.md                  @JosueSay @donmatthiuz
+/.gitleaks.toml               @JosueSay @donmatthiuz
+/.gitleaksignore              @JosueSay @donmatthiuz
+/scripts/dast-zap.sh          @JosueSay @donmatthiuz

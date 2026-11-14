@@ -1,0 +1,505 @@
+{
+	"@programName": "ZAP",
+	"@version": "2.17.0",
+	"@generated": "Sat, 14 Nov 2026 03:01:38",
+	"created": "2026-11-14T03:01:38.196193078Z",
+	"insights":[
+		{
+			"level": "Medium",
+			"reason": "Exceeded High",
+			"site": "http://news-dast-api-ed966939d7a3:8020",
+			"key": "insight.code.4xx",
+			"description": "Percentage of responses with status code 4xx",
+			"statistic": "99"
+		},
+		{
+			"level": "Low",
+			"reason": "Warning",
+			"site": "",
+			"key": "insight.log.error",
+			"description": "ZAP errors logged - see the zap.log file for details",
+			"statistic": "18"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "",
+			"key": "insight.network.failure",
+			"description": "Percentage of network failures",
+			"statistic": "83"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://news-dast-api-ed966939d7a3:8020",
+			"key": "insight.endpoint.ctype.application/json",
+			"description": "Percentage of endpoints with content type application/json",
+			"statistic": "100"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://news-dast-api-ed966939d7a3:8020",
+			"key": "insight.endpoint.method.GET",
+			"description": "Percentage of endpoints with method GET",
+			"statistic": "68"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://news-dast-api-ed966939d7a3:8020",
+			"key": "insight.endpoint.method.PATCH",
+			"description": "Percentage of endpoints with method PATCH",
+			"statistic": "4"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://news-dast-api-ed966939d7a3:8020",
+			"key": "insight.endpoint.method.POST",
+			"description": "Percentage of endpoints with method POST",
+			"statistic": "26"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://news-dast-api-ed966939d7a3:8020",
+			"key": "insight.endpoint.total",
+			"description": "Count of total endpoints",
+			"statistic": "41"
+		}
+	],
+	"site":[ 
+		{
+			"@name": "http://news-dast-api-ed966939d7a3:8020",
+			"@host": "news-dast-api-ed966939d7a3",
+			"@port": "8020",
+			"@ssl": "false",
+			"alerts": [ 
+				{
+					"pluginid": "100000",
+					"alertRef": "100000-1",
+					"alert": "A Client Error response code was returned by the server",
+					"name": "A Client Error response code was returned by the server",
+					"riskcode": "0",
+					"confidence": "3",
+					"riskdesc": "Informational (High)",
+					"desc": "<p>A response code of 404 was returned by the server.</p><p>This may indicate that the application is failing to handle unexpected input correctly.</p><p>Raised by the 'Alert on HTTP Response Code Error' script</p>",
+					"instances":[ 
+						{
+							"id": "13",
+							"uri": "http://news-dast-api-ed966939d7a3:8020",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "3110",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "7",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/2934872625352687166",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/2934872625352687166",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "14",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/admin",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/admin",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "3114",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/admin/",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/admin\/",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "8",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/admin/5247682439090561011",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/admin\/5247682439090561011",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "3503",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/admin/actuator/health",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/admin\/actuator\/health",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "3116",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/admin/image-library",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/admin\/image-library",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "401",
+							"otherinfo": ""
+						},
+						{
+							"id": "5",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/admin/image-library?topic=",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/admin\/image-library (topic)",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "401",
+							"otherinfo": ""
+						},
+						{
+							"id": "3117",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/admin/image-library/",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/admin\/image-library\/",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "401",
+							"otherinfo": ""
+						},
+						{
+							"id": "19",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/auth",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/auth",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "3118",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/auth/",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/auth\/",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "9",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/auth/6506813478801167642",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/auth\/6506813478801167642",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "1",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/auth/me",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/auth\/me",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "401",
+							"otherinfo": ""
+						},
+						{
+							"id": "3123",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/auth/me/",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/auth\/me\/",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "401",
+							"otherinfo": ""
+						},
+						{
+							"id": "10",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/news/5230747342614027114",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/news\/5230747342614027114",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "0",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/news/slug",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/news\/slug",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "3121",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/news/slug/",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/news\/slug\/",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "11",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/news/slug/7982576480894197979",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/news\/slug\/7982576480894197979",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "29",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/news/slug/interactions",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/news\/slug\/interactions",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "3124",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/news/slug/interactions/",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/news\/slug\/interactions\/",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "12",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/news/slug/interactions/8702273927160797229",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/news\/slug\/interactions\/8702273927160797229",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "405",
+							"otherinfo": ""
+						},
+						{
+							"id": "2",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/profile",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/profile",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "401",
+							"otherinfo": ""
+						},
+						{
+							"id": "3126",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/profile/",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/profile\/",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "401",
+							"otherinfo": ""
+						},
+						{
+							"id": "3",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/profile",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/profile ()({locationId,selectedTopics:[]})",
+							"method": "PATCH",
+							"param": "",
+							"attack": "",
+							"evidence": "401",
+							"otherinfo": ""
+						},
+						{
+							"id": "3113",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/profile/",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/profile\/ ()({locationId,selectedTopics:[]})",
+							"method": "PATCH",
+							"param": "",
+							"attack": "",
+							"evidence": "401",
+							"otherinfo": ""
+						},
+						{
+							"id": "6",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/admin/news",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/admin\/news ()({title,slug,summary,content,topic,keywords:[],locationId,status,verificationStatus,verificationNotes,humanReviewed,summaryGenerated,topicsGenerated,sources:[{name,url,sourceType,publishedAt,accessedAt,supports}],sourceName,sourceUrl,sourceType,imageUrl,imageAlt,imageCredit,imageRights,imageType,imageAiDisclosure})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "401",
+							"otherinfo": ""
+						},
+						{
+							"id": "3111",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/admin/news/",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/admin\/news\/ ()({title,slug,summary,content,topic,keywords:[],locationId,status,verificationStatus,verificationNotes,humanReviewed,summaryGenerated,topicsGenerated,sources:[{name,url,sourceType,publishedAt,accessedAt,supports}],sourceName,sourceUrl,sourceType,imageUrl,imageAlt,imageCredit,imageRights,imageType,imageAiDisclosure})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "401",
+							"otherinfo": ""
+						},
+						{
+							"id": "2307",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/computeMetadata/v1/",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/computeMetadata\/v1\/ ()({title,slug,summary,content,topic,keywords:[],locationId,status,verificationStatus,verificationNotes,humanReviewed,summaryGenerated,topicsGenerated,sources:[{name,url,sourceType,publishedAt,accessedAt,supports}],sourceName,sourceUrl,sourceType,imageUrl,imageAlt,imageCredit,imageRights,imageType,imageAiDisclosure})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "2304",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/latest/meta-data/",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/latest\/meta-data\/ ()({title,slug,summary,content,topic,keywords:[],locationId,status,verificationStatus,verificationNotes,humanReviewed,summaryGenerated,topicsGenerated,sources:[{name,url,sourceType,publishedAt,accessedAt,supports}],sourceName,sourceUrl,sourceType,imageUrl,imageAlt,imageCredit,imageRights,imageType,imageAiDisclosure})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "2344",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/metadata/instance",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/metadata\/instance ()({title,slug,summary,content,topic,keywords:[],locationId,status,verificationStatus,verificationNotes,humanReviewed,summaryGenerated,topicsGenerated,sources:[{name,url,sourceType,publishedAt,accessedAt,supports}],sourceName,sourceUrl,sourceType,imageUrl,imageAlt,imageCredit,imageRights,imageType,imageAiDisclosure})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "2348",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/metadata/v1",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/metadata\/v1 ()({title,slug,summary,content,topic,keywords:[],locationId,status,verificationStatus,verificationNotes,humanReviewed,summaryGenerated,topicsGenerated,sources:[{name,url,sourceType,publishedAt,accessedAt,supports}],sourceName,sourceUrl,sourceType,imageUrl,imageAlt,imageCredit,imageRights,imageType,imageAiDisclosure})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "4",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/news/slug/interactions/interaction_type",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/news\/slug\/interactions\/interaction_type ()({feedPosition,dwellTimeSeconds})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "401",
+							"otherinfo": ""
+						},
+						{
+							"id": "3112",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/news/slug/interactions/interaction_type/",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/news\/slug\/interactions\/interaction_type\/ ()({feedPosition,dwellTimeSeconds})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "401",
+							"otherinfo": ""
+						},
+						{
+							"id": "2314",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/opc/v1/instance/",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/opc\/v1\/instance\/ ()({title,slug,summary,content,topic,keywords:[],locationId,status,verificationStatus,verificationNotes,humanReviewed,summaryGenerated,topicsGenerated,sources:[{name,url,sourceType,publishedAt,accessedAt,supports}],sourceName,sourceUrl,sourceType,imageUrl,imageAlt,imageCredit,imageRights,imageType,imageAiDisclosure})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "2322",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/opc/v2/instance/",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/opc\/v2\/instance\/ ()({title,slug,summary,content,topic,keywords:[],locationId,status,verificationStatus,verificationNotes,humanReviewed,summaryGenerated,topicsGenerated,sources:[{name,url,sourceType,publishedAt,accessedAt,supports}],sourceName,sourceUrl,sourceType,imageUrl,imageAlt,imageCredit,imageRights,imageType,imageAiDisclosure})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						},
+						{
+							"id": "2354",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/openstack/latest/meta_data.json",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/openstack\/latest\/meta_data.json ()({title,slug,summary,content,topic,keywords:[],locationId,status,verificationStatus,verificationNotes,humanReviewed,summaryGenerated,topicsGenerated,sources:[{name,url,sourceType,publishedAt,accessedAt,supports}],sourceName,sourceUrl,sourceType,imageUrl,imageAlt,imageCredit,imageRights,imageType,imageAiDisclosure})",
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "404",
+							"otherinfo": ""
+						}
+					],
+					"count": "37",
+					"systemic": false,
+					"solution": "",
+					"otherinfo": "",
+					"reference": "",
+					"cweid": "388",
+					"wascid": "20",
+					"sourceid": "31"
+				},
+				{
+					"pluginid": "10112",
+					"alertRef": "10112",
+					"alert": "Session Management Response Identified",
+					"name": "Session Management Response Identified",
+					"riskcode": "0",
+					"confidence": "3",
+					"riskdesc": "Informational (High)",
+					"desc": "<p>The given response has been identified as containing a session management token. The 'Other Info' field contains a set of header tokens that can be used in the Header Based Session Management Method. If the request is in a context which has a Session Management Method set to \"Auto-Detect\" then this rule will change the session management to use the tokens identified.</p>",
+					"instances":[ 
+						{
+							"id": "773",
+							"uri": "http://news-dast-api-ed966939d7a3:8020/admin/image-library?topic=",
+							"nodeName": "http:\/\/news-dast-api-ed966939d7a3:8020\/admin\/image-library (topic)",
+							"method": "GET",
+							"param": "topic",
+							"attack": "",
+							"evidence": "topic",
+							"otherinfo": "url:topic"
+						}
+					],
+					"count": "1",
+					"systemic": false,
+					"solution": "<p>This is an informational alert rather than a vulnerability and so there is nothing to fix.</p>",
+					"otherinfo": "<p>url:topic</p>",
+					"reference": "<p>https://www.zaproxy.org/docs/desktop/addons/authentication-helper/session-mgmt-id/</p>",
+					"cweid": "-1",
+					"wascid": "-1",
+					"sourceid": "777"
+				}
+			]
+		}
+	],
+	"sequences":[
+	]
+
+}

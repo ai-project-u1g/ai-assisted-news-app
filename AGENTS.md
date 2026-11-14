@@ -76,6 +76,20 @@ local de noticias (`backend/news/api.py`), el frontend que la consume y el chat 
 assistant en modo news (`backend/assistant/news_chat/`) con su pantalla. Ver
 `backend/loops/handoffs/news-chat-integration-result.md`.
 
+Excepción autorizada por decisión humana (2026-11-13): para el plan ITIL y DevOps
+(`docs/deploy/plan-itil-devops/`) se permite agregar controles de seguridad DevSecOps:
+workflows de análisis en `.github/`, configuración de Dependabot, escaneos con contenedores y
+la documentación de `06-seguridad/`. Los escáneres nunca leen `keys/` ni archivos `.env`, y
+los reportes no reproducen valores secretos. Los cambios de configuración del repositorio en
+GitHub o de la nube se coordinan antes con el equipo.
+
+Excepción autorizada por decisión humana (2026-11-13): para el apartado de despliegue continuo
+del mismo plan (`02-cd/`) se permite ajustar `.github/workflows/deploy.yml` y los scripts de
+`deploy/` con controles livianos (filtro de rutas, verificación de solo lectura después de
+publicar), sus tests y la documentación de `02-cd/` y `docs/deploy/`. No se agregan reglas que
+bloqueen a otros integrantes (protección de ramas, aprobaciones obligatorias) sin acuerdo del
+equipo, y el pipeline sigue sin cambiar IAM, secretos ni esquemas de base de datos.
+
 ---
 
 ## Separación del assistant existente

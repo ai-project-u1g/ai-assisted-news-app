@@ -11,7 +11,7 @@ Completen los campos entre corchetes con información de su proyecto. En cada co
 | **Nombre completo** | **Carnet** |
 | --- | :---: |
 | Mathew Alexander Cordero Aquino | 22982 |
-| [Nombre completo] | [Carnet] |
+| Pedro Pablo Guzmán Mayen | 22111 |
 | [Nombre completo] | [Carnet] |
 | [Nombre completo] | [Carnet] |
 | [Nombre completo] | [Carnet] |

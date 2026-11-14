@@ -1,0 +1,65 @@
+# Actualizaciones de dependencias (docs/deploy/plan-itil-devops/06-seguridad/).
+# Solo tiene efecto cuando este archivo está en main.
+# Un PR agrupado por ecosistema para cambios menores y parches. Los saltos de versión
+# mayor (SDK de Expo, Python, Node) se planifican aparte con pruebas. Las
+# actualizaciones de seguridad no dependen de estas reglas y siguen abriéndose.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directories: [/backend/news, /backend/assistant]
+    schedule:
+      interval: weekly
+    groups:
+      python:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    groups:
+      frontend:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: [version-update:semver-major]
+      # Versiones fijadas por el SDK de Expo: se actualizan con `npx expo install --fix`.
+      # Dependabot propuso react-native 0.88 y el typecheck del CI lo rechazó (PR #39).
+      - dependency-name: "expo"
+      - dependency-name: "expo-*"
+      - dependency-name: "babel-preset-expo"
+      - dependency-name: "react"
+      - dependency-name: "react-dom"
+      - dependency-name: "react-native"
+      - dependency-name: "react-native-web"
+      - dependency-name: "react-native-svg"
+      - dependency-name: "react-native-safe-area-context"
+      - dependency-name: "@react-native-async-storage/async-storage"
+      - dependency-name: "@types/react"
+      - dependency-name: "@types/react-dom"
+      - dependency-name: "typescript"
+
+  # Las imágenes base solo reciben parches; cambiar de Python 3.13 o Node 24 es una
+  # decisión del equipo.
+  - package-ecosystem: docker
+    directories: [/backend/news, /backend/assistant, /frontend]
+    schedule:
+      interval: weekly
+    ignore:
+      - dependency-name: "*"
+        update-types: [version-update:semver-major, version-update:semver-minor]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+    # Un salto mayor de una acción de deploy solo se prueba en main; se planifica aparte.
+    ignore:
+      - dependency-name: "*"
+        update-types: [version-update:semver-major]

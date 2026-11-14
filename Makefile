@@ -1,13 +1,13 @@
 .PHONY: env-local env-atlas db-check-config db-ping db-test db-init db-schema-check db-seed-catalog db-seed-catalogs db-seed-check db-seed-demo db-seed-news db-news-check db-bootstrap db-verify db-reseed-dry-run db-reseed news-db-up news-db-down news-api-up setup-keys
-.PHONY: chatbot-up chatbot-test news-contract news-contract-check news-integration-test
+.PHONY: chatbot-up chatbot-test news-contract news-contract-check news-integration-test security-dast
 .PHONY: chatbot-stub chatbot-api chatbot-openai chatbot-config-test
 .PHONY: db-news-images-check
 .PHONY: gcp-bootstrap gcp-secrets gcp-deploy
-.PHONY: deploy-test firebase-check-config firebase-deploy android-apk android-apk-ci
+.PHONY: deploy-test deploy-smoke firebase-check-config firebase-deploy android-apk android-apk-ci
 
 # El .env local de Compose puede contener localhost y otro proyecto Firebase.
 # Los comandos cloud usan el entorno/config.sh y el frontend usa sus propios .env.
-CLOUD_TARGETS := gcp-bootstrap gcp-secrets gcp-deploy firebase-check-config firebase-deploy deploy-test android-apk android-apk-ci
+CLOUD_TARGETS := gcp-bootstrap gcp-secrets gcp-deploy firebase-check-config firebase-deploy deploy-test deploy-smoke android-apk android-apk-ci
 ifneq ($(filter $(CLOUD_TARGETS),$(MAKECMDGOALS)),)
 ifneq ($(filter-out $(CLOUD_TARGETS),$(MAKECMDGOALS)),)
 $(error Ejecuta las tareas locales y cloud en comandos make separados)
@@ -224,6 +224,10 @@ setup-keys:
 news-integration-test:
 	@bash scripts/news-integration-test.sh
 
+# DAST con OWASP ZAP contra la API en contenedores temporales (sin keys/). Reporte en dast-report/.
+security-dast:
+	@bash scripts/dast-zap.sh
+
 # Deploy en Google Cloud (ver docs/deploy/README.md). Requiere gcloud con sesión iniciada.
 # Los secretos se suben desde keys/ sin imprimirse.
 gcp-bootstrap:
@@ -237,6 +241,10 @@ gcp-deploy:
 
 deploy-test:
 	@python3 -m unittest discover -s tests/unit -p test_deploy_scripts.py -v
+
+# Verificación de solo lectura del despliegue publicado. TAG = sha corto desplegado.
+deploy-smoke:
+	@bash deploy/smoke-test.sh
 
 firebase-check-config:
 	@bash deploy/firebase/hosting.sh --check
