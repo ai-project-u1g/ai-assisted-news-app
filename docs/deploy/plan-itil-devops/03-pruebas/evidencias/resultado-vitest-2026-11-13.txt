@@ -1,0 +1,16 @@
+Comando: cd frontend && npm test
+Commit: 6b1c02a, rama main. Fecha: 13 de noviembre de 2026.
+
+
+> ai-assisted-news-frontend@1.0.0 test
+> vitest run
+
+
+ RUN  v4.1.12 <repo>/frontend
+
+
+ Test Files  11 passed (11)
+      Tests  81 passed (81)
+   Start at  21:42:22
+   Duration  1.08s (transform 514ms, setup 0ms, import 991ms, tests 710ms, environment 657ms)
+

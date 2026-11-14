@@ -1,0 +1,63 @@
+Comando: cd backend && pytest assistant/tests news/tests
+Commit: 6b1c02a, rama main. Python 3.13.18. Fecha: 13 de noviembre de 2026.
+
+============================= test session starts ==============================
+platform linux -- Python 3.13.18, pytest-8.4.2, pluggy-1.7.0
+rootdir: <repo>/backend/assistant
+configfile: pyproject.toml
+plugins: anyio-4.16.0, asyncio-1.5.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 431 items
+
+assistant/tests/test_app.py ....                                         [  0%]
+assistant/tests/test_mongo_repository.py .                               [  1%]
+assistant/tests/test_news_app.py .......                                 [  2%]
+assistant/tests/test_news_chat.py ...................................... [ 11%]
+....                                                                     [ 12%]
+assistant/tests/test_news_conversation.py .................              [ 16%]
+assistant/tests/test_news_database_queries.py .....................      [ 21%]
+assistant/tests/test_news_routing.py ................                    [ 25%]
+assistant/tests/test_openai_provider.py .                                [ 25%]
+assistant/tests/test_prompt.py ..                                        [ 25%]
+assistant/tests/test_service.py .                                        [ 25%]
+assistant/tests/test_shared_news_contract.py ................            [ 29%]
+assistant/tests/test_smoke.py s                                          [ 29%]
+assistant/test_ai_usage_model.py .........                               [ 32%]
+assistant/test_api.py ....                                               [ 32%]
+assistant/test_api_firebase_auth.py ....                                 [ 33%]
+assistant/test_audit_log_model.py ......                                 [ 35%]
+assistant/test_bootstrap.py ...                                          [ 35%]
+assistant/test_catalog_data.py .....                                     [ 37%]
+assistant/test_chat_session_model.py ............                        [ 39%]
+assistant/test_check_config.py ...                                       [ 40%]
+assistant/test_config.py ......                                          [ 41%]
+assistant/test_coverage.py ...                                           [ 42%]
+assistant/test_database.py .......                                       [ 44%]
+assistant/test_demo_news.py .............                                [ 47%]
+assistant/test_editorial_policy.py ...................                   [ 51%]
+assistant/test_export_contract.py ..                                     [ 52%]
+assistant/test_firebase_auth.py ..........                               [ 54%]
+assistant/test_image_library.py .....                                    [ 55%]
+assistant/test_interactions.py .....                                     [ 56%]
+assistant/test_location_model.py .....                                   [ 58%]
+assistant/test_news_check.py .............                               [ 61%]
+assistant/test_news_images_check.py ..................................   [ 68%]
+assistant/test_news_model.py ....................                        [ 73%]
+assistant/test_personalization.py ........                               [ 75%]
+assistant/test_reading_time.py ........                                  [ 77%]
+assistant/test_reseed.py .......................                         [ 82%]
+assistant/test_schema_check.py .....                                     [ 83%]
+assistant/test_schema_definitions.py .....                               [ 84%]
+assistant/test_schema_initialize.py ....                                 [ 85%]
+assistant/test_secret_loader.py ........                                 [ 87%]
+assistant/test_seed_catalog.py ......                                    [ 89%]
+assistant/test_seed_check.py .....                                       [ 90%]
+assistant/test_seed_demo.py ..                                           [ 90%]
+assistant/test_seed_news.py ......                                       [ 92%]
+assistant/test_topics.py ........                                        [ 93%]
+assistant/test_user_accounts.py ...                                      [ 94%]
+assistant/test_user_interaction_model.py .........                       [ 96%]
+assistant/test_user_model.py .........                                   [ 98%]
+assistant/test_verify.py .....                                           [100%]
+
+======================== 430 passed, 1 skipped in 2.35s ========================
