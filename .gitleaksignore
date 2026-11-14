@@ -4,15 +4,3 @@
 # API key de Firebase para Android: pública dentro del APK por diseño; se mitiga con
 # restricciones de la key en Google Cloud.
 27f8ceca56723df027e66b327750ce440ed60c93:frontend/google-services.json:gcp-api-key:31
-# Reporte de ZAP: el nombre temporal del contenedor (news-dast-api-<hex>:8020) parece una key.
-# scripts/dast-zap.sh ahora usa el alias fijo news-api para evitarlo en reportes nuevos.
-6451671e5ebe2c94a5c9642204732514ce201471:docs/deploy/plan-itil-devops/06-seguridad/evidencias/dast/zap-report.html:generic-api-key:1058
-6451671e5ebe2c94a5c9642204732514ce201471:docs/deploy/plan-itil-devops/06-seguridad/evidencias/dast/zap-report.html:generic-api-key:1166
-6451671e5ebe2c94a5c9642204732514ce201471:docs/deploy/plan-itil-devops/06-seguridad/evidencias/dast/zap-report.html:generic-api-key:1742
-6451671e5ebe2c94a5c9642204732514ce201471:docs/deploy/plan-itil-devops/06-seguridad/evidencias/dast/zap-report.html:generic-api-key:1747
-6451671e5ebe2c94a5c9642204732514ce201471:docs/deploy/plan-itil-devops/06-seguridad/evidencias/dast/zap-report.html:generic-api-key:1778
-6451671e5ebe2c94a5c9642204732514ce201471:docs/deploy/plan-itil-devops/06-seguridad/evidencias/dast/zap-report.html:generic-api-key:1783
-6451671e5ebe2c94a5c9642204732514ce201471:docs/deploy/plan-itil-devops/06-seguridad/evidencias/dast/zap-report.json:generic-api-key:241
-6451671e5ebe2c94a5c9642204732514ce201471:docs/deploy/plan-itil-devops/06-seguridad/evidencias/dast/zap-report.json:generic-api-key:271
-6451671e5ebe2c94a5c9642204732514ce201471:docs/deploy/plan-itil-devops/06-seguridad/evidencias/dast/zap-report.json:generic-api-key:431
-6451671e5ebe2c94a5c9642204732514ce201471:docs/deploy/plan-itil-devops/06-seguridad/evidencias/dast/zap-report.json:generic-api-key:441
