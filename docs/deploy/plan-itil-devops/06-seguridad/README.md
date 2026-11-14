@@ -225,6 +225,10 @@ Security; un hallazgo alto con corrección bloquea el pipeline hasta resolverlo.
 
 *Figura 23. Los 9 checks obligatorios, todos con fuente GitHub Actions.*
 
+![PR #51 bloqueado por el ruleset](evidencias/ruleset-6-pr51-bloqueado.png)
+
+*Figura 24. Prueba del ruleset: el PR #51 pasa todos los checks obligatorios y aun así no se puede integrar hasta que otra persona lo apruebe.*
+
 Las evidencias de la API key (restricción, login en web y Android) están en el
 [documento del hallazgo](evidencias/hallazgo-firebase-api-key.md).
 
