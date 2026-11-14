@@ -28,6 +28,7 @@ sigue [Acceso web móvil](acceso-web-movil.md).
 | `make android-apk` | Solicitar un APK firmado en EAS, tras configurar cuenta y variables |
 | `make android-apk-ci` | En el runner: esperar el APK y exportar su URL para Hosting |
 | `make deploy-test` | Comprobar comandos cloud/Hosting, preflight CI e IAM simulados, sin red ni secretos |
+| `make deploy-smoke TAG=<sha>` | Verificar, en solo lectura, que Cloud Run sirve ese commit con `/health` en `ok` y que Hosting responde |
 | `make news-integration-test` | Probar API, perfil, lecturas y chat sobre MongoDB efímera |
 
 Configura `PROJECT_ID` y opcionalmente `NEWS_FIREBASE_PROJECT_ID` y `REGION` antes
@@ -52,6 +53,8 @@ por defecto y requiere una región explícita. La guía detalla estos pasos.
 - `deploy/firebase/ci.sh`: resuelve URLs Cloud Run y publica Hosting con las
   variables públicas del runner y credenciales ADC/WIF.
 - `deploy/gcp/check-ci-config.sh`: valida variables antes de cambios cloud.
+- `deploy/smoke-test.sh`: verificación de solo lectura después de publicar; el workflow
+  la ejecuta como último paso.
 - `.github/workflows/deploy.yml`: tests backend/frontend y publicación de Cloud
   Run seguida de Hosting desde `main`, con variables GitHub `production`.
 

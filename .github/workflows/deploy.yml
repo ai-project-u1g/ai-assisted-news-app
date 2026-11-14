@@ -6,6 +6,18 @@ on:
   pull_request:
   push:
     branches: [main]
+    # Si el push solo trae archivos que no llegan a producción, no se publica nada
+    # (docs/deploy/plan-itil-devops/02-cd/). Basta un archivo fuera de esta lista para desplegar.
+    # Para publicar igual: Actions → deploy → Run workflow.
+    paths-ignore:
+      - "docs/**"
+      - "*.md"
+      - "backend/loops/**"
+      - ".github/dependabot.yml"
+      - ".github/workflows/security.yml"
+      - ".gitleaks.toml"
+      - ".gitleaksignore"
+      - "scripts/dast-zap.sh"
   workflow_dispatch:
 
 permissions:
@@ -117,3 +129,7 @@ jobs:
           service_account: ${{ env.DEPLOYER_SA }}
       - name: Publicar frontend en Firebase Hosting
         run: bash deploy/firebase/ci.sh
+      # Solo lectura: imagen del commit, /health con MongoDB y sitio en línea. Si falla, el run
+      # queda en rojo y avisa al equipo; volver atrás es manual (pipeline-paso-a-paso.md).
+      - name: Verificar servicios publicados
+        run: bash deploy/smoke-test.sh
