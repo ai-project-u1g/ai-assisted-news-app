@@ -255,3 +255,14 @@ def test_profile_preferences_feed_and_reading_signals_are_user_scoped(monkeypatc
     )
     assert opened_record["context"]["feedPosition"] == 0
     assert opened_record["dwellTimeSeconds"] == 35
+
+
+def test_responses_include_nosniff_header_even_on_errors(monkeypatch):
+    # Hallazgo DAST de ZAP: X-Content-Type-Options Header Missing.
+    settings = SimpleNamespace(firebase_project_id="news-project", mongodb_database="ai_assisted_news")
+    monkeypatch.setattr("news.api.get_news_settings", lambda: settings)
+    monkeypatch.setattr("news.api.get_news_client", lambda _settings: FakeClient(FakeDatabase()))
+    with TestClient(create_app()) as client:
+        for path in ("/openapi.json", "/profile", "/no-existe"):
+            response = client.get(path)
+            assert response.headers["X-Content-Type-Options"] == "nosniff"

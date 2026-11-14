@@ -123,3 +123,19 @@ jobs:
         with:
           sarif_file: trivy-${{ matrix.service }}.sarif
           category: trivy-image-${{ matrix.service }}
+
+  dast:
+    name: DAST (OWASP ZAP sobre la API)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Imagen de Cloud Run + MongoDB efímera con datos demo, en una red Docker interna.
+      - name: ZAP API scan
+        run: bash scripts/dast-zap.sh
+      - name: Guardar reporte
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-report
+          path: dast-report/
+          if-no-files-found: ignore

@@ -75,7 +75,7 @@ contraseña, y el build de CI la necesita. El control efectivo es restringir la 
 | Prioridad | Medida | Detalle |
 | :---: | --- | --- |
 | 1 | Restringir la key | Aplicado el 13 de noviembre de 2026; ver «Registro del cambio». |
-| 2 | Cerrar la alerta #1 | Tras restringir la key, cerrar la alerta de secret scanning como «se usa en configuración pública» con la justificación de este documento. |
+| 2 | Cerrar la alerta #1 | Aplicado el 13 de noviembre de 2026; ver «Registro del cambio». |
 | 3 | Rotar la key | Solo si las métricas muestran uso ajeno: crear una key nueva restringida, regenerar `google-services.json` y eliminar la anterior. Sigue en el historial público (`27f8cec`). |
 
 Alternativa considerada y descartada por ahora: quitar el archivo del repositorio con
@@ -96,9 +96,13 @@ evaluó el riesgo, se preparó la reversa y lo autorizó el responsable del serv
 | Autorización | Mathew Cordero, responsable de Firebase y del proyecto de Google Cloud, 13 de noviembre de 2026 |
 | Implementación | Josué Say, 13 de noviembre de 2026, con `gcloud services api-keys update`: aplicación Android `com.aina.news` + SHA-1 del certificado de firma (tomado de `google-services.json`), y APIs limitadas a `identitytoolkit`, `securetoken` y `firebaseinstallations` |
 | Verificación | `gcloud services api-keys describe` muestra 1 aplicación Android permitida y 3 APIs. Pendiente: probar el inicio de sesión con Google en el APK |
-| Cierre | Cerrar la alerta #1 de secret scanning con la justificación de este documento |
+| Cierre | Alerta #1 de secret scanning cerrada como «won't fix» el 13 de noviembre de 2026, con la justificación de este documento. Secret scanning queda sin alertas abiertas |
 
 | Control | Antes | Después |
 | --- | --- | --- |
 | Restricción de aplicación | Ninguna | Android: `com.aina.news` + SHA-1 |
 | APIs permitidas | 27 | 3 |
+
+![Alerta #1 cerrada como won't fix](secret-scanning-despues-alerta-cerrada.png)
+
+*Figura 3. Alerta #1 cerrada como «won't fix» y secret scanning sin alertas abiertas. En la captura se ocultó el valor de la key.*

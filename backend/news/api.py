@@ -629,6 +629,13 @@ def create_app() -> FastAPI:
         allow_headers=["Content-Type", "Authorization"],
     )
 
+    # Evita que el navegador interprete respuestas con otro tipo de contenido (hallazgo DAST de ZAP).
+    @application.middleware("http")
+    async def security_headers(request: Request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        return response
+
     @application.get("/health", response_model=HealthResponse)
     async def health(request: Request) -> HealthResponse:
         settings = request.app.state.news_settings

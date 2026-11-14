@@ -1,5 +1,5 @@
 .PHONY: env-local env-atlas db-check-config db-ping db-test db-init db-schema-check db-seed-catalog db-seed-catalogs db-seed-check db-seed-demo db-seed-news db-news-check db-bootstrap db-verify db-reseed-dry-run db-reseed news-db-up news-db-down news-api-up setup-keys
-.PHONY: chatbot-up chatbot-test news-contract news-contract-check news-integration-test
+.PHONY: chatbot-up chatbot-test news-contract news-contract-check news-integration-test security-dast
 .PHONY: chatbot-stub chatbot-api chatbot-openai chatbot-config-test
 .PHONY: db-news-images-check
 .PHONY: gcp-bootstrap gcp-secrets gcp-deploy
@@ -223,6 +223,10 @@ setup-keys:
 
 news-integration-test:
 	@bash scripts/news-integration-test.sh
+
+# DAST con OWASP ZAP contra la API en contenedores temporales (sin keys/). Reporte en dast-report/.
+security-dast:
+	@bash scripts/dast-zap.sh
 
 # Deploy en Google Cloud (ver docs/deploy/README.md). Requiere gcloud con sesión iniciada.
 # Los secretos se suben desde keys/ sin imprimirse.
