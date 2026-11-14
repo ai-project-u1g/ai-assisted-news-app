@@ -1,4 +1,4 @@
-FROM node:24-bookworm-slim AS development
+FROM node:25-bookworm-slim AS development
 
 ENV EXPO_NO_TELEMETRY=1 \
     npm_config_update_notifier=false
