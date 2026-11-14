@@ -1,0 +1,6 @@
+# Falsos positivos revisados (docs/deploy/plan-itil-devops/06-seguridad/).
+# Ejemplo truncado de id_token en la documentación de la API.
+1a4860f3bde8e9b3aab54ae8ddba01b5ba3533f3:docs/api/README.md:generic-api-key:46
+# API key de Firebase para Android: pública dentro del APK por diseño; se mitiga con
+# restricciones de la key en Google Cloud.
+27f8ceca56723df027e66b327750ce440ed60c93:frontend/google-services.json:gcp-api-key:31

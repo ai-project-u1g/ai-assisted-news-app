@@ -1,0 +1,25 @@
+# Actualizaciones de dependencias (docs/deploy/plan-itil-devops/06-seguridad/).
+# Solo tiene efecto cuando este archivo está en main.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directories: [/backend/news, /backend/assistant]
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: docker
+    directories: [/backend/news, /backend/assistant, /frontend]
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
