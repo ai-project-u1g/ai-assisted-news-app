@@ -5,7 +5,7 @@
 set -euo pipefail
 project_dir="$(cd "$(dirname "$0")/.." && pwd)"
 report_dir="$project_dir/dast-report"
-zap_image="${ZAP_IMAGE:-ghcr.io/zaproxy/zaproxy:stable}"
+zap_image="${ZAP_IMAGE:-ghcr.io/zaproxy/zaproxy:2.17.0}"
 suffix="$(python3 -c 'import uuid; print(uuid.uuid4().hex[:12])')"
 network="news-dast-network-$suffix"
 mongo="news-dast-mongo-$suffix"
