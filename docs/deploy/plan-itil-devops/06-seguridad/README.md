@@ -110,7 +110,7 @@ autorizó Mathew Cordero, responsable de Firebase.
 | Gestión de la seguridad de la información | Tríada CIA en el pipeline: confidencialidad (secretos y keys), integridad (dependencias e imágenes verificadas), disponibilidad (DoS en dependencias y cabeceras) |
 | Habilitación de cambios | Cada corrección entra por pull request con checks automáticos como evaluación de riesgo. La restricción de la key siguió el flujo completo: solicitud, riesgo, plan de reversa, autorización, implementación, verificación y cierre ([registro](evidencias/hallazgo-firebase-api-key.md#registro-del-cambio)) |
 | Gestión de riesgos | Cada hallazgo se trató con una de las estrategias vistas en clase: eliminar (corregir dependencias), minimizar (restringir la key) o aceptar con justificación (`minimatch`, `uuid` y vulnerabilidades del sistema sin corrección de Debian) |
-| Mejora continua | El escaneo semanal detecta CVE nuevas sin cambios de código, y Dependabot propone las actualizaciones |
+| Mejora continua | El escaneo semanal detecta CVE nuevas sin cambios de código, y Dependabot propone las actualizaciones. Las 9 actualizaciones de Python que propuso se integraron en un solo cambio probado ([#48](https://github.com/ai-project-u1g/ai-assisted-news-app/pull/48)) en lugar de 9 despliegues separados, y las del frontend agrupadas en [#41](https://github.com/ai-project-u1g/ai-assisted-news-app/pull/41) |
 
 Seguimiento: el workflow `security` corre cada lunes. Quien integre a `main` revisa la pestaña
 Security; un hallazgo alto con corrección bloquea el pipeline hasta resolverlo.
