@@ -35,7 +35,7 @@ jobs:
       matrix:
         language: [python, javascript-typescript]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
@@ -49,7 +49,7 @@ jobs:
     name: Secretos (gitleaks)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       # Revisa todo el historial. --redact evita que un valor aparezca en el log.
@@ -66,7 +66,7 @@ jobs:
       contents: read
       security-events: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       # Referncias/ es código de consulta que no se despliega.
       - name: Trivy fs
         run: >
@@ -108,7 +108,7 @@ jobs:
           - service: news-chatbot
             build: docker build -f backend/assistant/Dockerfile --target runtime -t scan/news-chatbot backend
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Construir imagen
         run: ${{ matrix.build }}
       - name: Trivy image
