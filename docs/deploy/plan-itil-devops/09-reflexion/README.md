@@ -49,7 +49,7 @@ Cada integrante agrega la subsección de su componente bajo cada pregunta.
 
 | Prioridad | Mejora | Enfoque | Responsable | Plazo |
 | :---: | --- | --- | --- | --- |
-| 1 | Ruleset en `main`: pull request, una aprobación y checks de `security` obligatorios | Automatización | Josué Say | Al cierre de la entrega |
+| 1 | Ruleset en `main`: pull request, una aprobación y checks de `security` obligatorios | Automatización | Josué Say | Implementado al cierre (ruleset `main-protegida` con `CODEOWNERS`) |
 | 2 | Desactivar `/docs` y `/openapi.json` en producción, como exige el ADR 0001 | DevSecOps | Josué Say | 1 semana |
 | 3 | Alertas de Cloud Monitoring por picos de respuestas 401 y 429 y por costo del chat, con rate limit en `/chat` | DevSecMonOps, monitoreo y FinOps | Josué Say con el responsable de FinOps | 2 semanas |
 | 4 | Restringir la Browser key de Firebase a los dominios de Hosting | DevSecOps | Mathew Cordero | 1 semana |

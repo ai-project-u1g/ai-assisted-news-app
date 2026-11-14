@@ -1,7 +1,8 @@
 # 6 Gestión de seguridad DevSecOps
 
-**Estado:** Implementado. Los controles corren en cada pull request, en `main` y cada semana. Las
-brechas restantes tienen propuesta de mejora (ver al final).
+**Estado:** Implementado. Los controles corren en cada pull request, en `main` y cada semana, y
+`main` está protegida: nada entra sin pull request aprobado y los controles en verde. Las brechas
+restantes tienen propuesta de mejora (ver al final).
 
 ## Riesgos identificados
 
@@ -12,7 +13,7 @@ brechas restantes tienen propuesta de mejora (ver al final).
 | Código inseguro | Inyección, validación insuficiente u otros patrones que solo se ven leyendo el código |
 | Configuración insegura de la API en ejecución | Cabeceras de seguridad faltantes, rutas expuestas |
 | Imágenes de contenedor con más de lo necesario | La imagen de `news-api` incluía pip y herramientas de prueba en producción |
-| Cambios sin revisión | `main` no está protegida y admite cambios directos |
+| Cambios sin revisión | `main` no estaba protegida y admitía cambios directos, sin pull request ni checks |
 
 ## Controles y herramientas
 
@@ -32,6 +33,7 @@ externas. Los controles nuevos están en `.github/workflows/security.yml`, separ
 | Despliegue | Credenciales | Workload Identity Federation, Secret Manager, una cuenta de servicio por servicio | Llaves de larga duración en GitHub |
 | Cadena de suministro | Versiones fijas | Acciones de `security.yml` fijadas por SHA e imágenes de las herramientas con versión fija (Trivy, gitleaks, ZAP), actualizadas por Dependabot | Una etiqueta movida o una versión nueva que cambie resultados sin aviso |
 | Gobierno | Política de seguridad | `SECURITY.md` con el reporte privado de vulnerabilidades de GitHub, plazos y alcance | Reportes públicos de vulnerabilidades sin corregir |
+| Gobierno | Protección de `main` | Ruleset `main-protegida`: pull request con una aprobación (de otra persona y sobre el último push), revisión de code owners, conversaciones resueltas, los 9 checks de `security` y `deploy` en verde, y bloqueo de force push y borrado. Sin excepciones. `.github/CODEOWNERS` asigna dos responsables a pipelines, despliegue y configuración de seguridad | Cambios sin revisión, integrar con checks en rojo, reescribir o borrar el historial de `main` |
 
 Criterio de corte: Trivy falla con hallazgos altos o críticos que ya tienen corrección publicada, y
 ZAP falla con alertas de riesgo alto. Los reportes se suben a la pestaña Security (SARIF) y el de
@@ -100,7 +102,8 @@ Del 13 de noviembre de 2026, antes y después de los PR
 | Dependabot propuso React Native 0.88, incompatible con el SDK 57 | El typecheck del CI rechazó el PR #39; se excluyeron los paquetes fijados por Expo | #40 |
 | ZAP: falta `X-Content-Type-Options` | La API envía `nosniff` en todas las respuestas, con prueba | #43 |
 | gitleaks marcó el nombre temporal del contenedor en el reporte de ZAP | Alias fijo `news-api` en el script y excepción por patrón en `.gitleaks.toml`. Primero se usaron huellas en `.gitleaksignore`, pero incluyen el SHA del commit y dejaron de coincidir tras el squash merge | #44, #45 |
-| Avisos «Node.js 20 is deprecated» en el run de `main` (Figura 13): `actions/checkout@v4` y `setup-python@v5` corren sobre Node 20, que GitHub retira | `security.yml` usa `checkout` v7.0.1, `setup-python` v7.1.0 y `upload-artifact` v7.0.2 (Node 24), fijadas por SHA. `deploy.yml` mantiene v4: se propone al responsable de CI/CD | #49 |
+| Avisos «Node.js 20 is deprecated» en el run de `main` (Figura 13): `actions/checkout@v4` y `setup-python@v5` corren sobre Node 20, que GitHub retira | `security.yml` usa `checkout` v7.0.1, `setup-python` v7.1.0 y `upload-artifact` v7.0.2 (Node 24), fijadas por SHA. El responsable de CI/CD aplicó lo mismo en `deploy.yml` (`8744645`) | #49 |
+| `main` sin protección: admitía push directo y merges con checks en rojo (brecha también registrada en [5 Gestión de versionamiento](../05-git/README.md)) | Ruleset `main-protegida` activo y `CODEOWNERS` (`b36bff4`), acordados con el equipo al cerrar la entrega | Configuración del repositorio |
 | `minimatch` y `uuid` sin versión compatible con Expo 57 | Descartadas en Dependabot: riesgo tolerable (patrones propios en build) y código no usado (`uuid.v4()` sin `buf`) | - |
 
 **Responsable y fecha:** Josué Say · 13 de noviembre de 2026. La restricción de la API key la
@@ -111,7 +114,7 @@ autorizó Mathew Cordero, responsable de Firebase.
 | Práctica de ITIL | Aplicación concreta |
 | --- | --- |
 | Gestión de la seguridad de la información | Tríada CIA en el pipeline: confidencialidad (secretos y keys), integridad (dependencias e imágenes verificadas), disponibilidad (DoS en dependencias y cabeceras) |
-| Habilitación de cambios | Cada corrección entra por pull request con checks automáticos como evaluación de riesgo. La restricción de la key siguió el flujo completo: solicitud, riesgo, plan de reversa, autorización, implementación, verificación y cierre ([registro](evidencias/hallazgo-firebase-api-key.md#registro-del-cambio)) |
+| Habilitación de cambios | Cada corrección entra por pull request con checks automáticos como evaluación de riesgo; el ruleset `main-protegida` lo hace obligatorio, con una aprobación como autorización del cambio. La restricción de la key siguió el flujo completo: solicitud, riesgo, plan de reversa, autorización, implementación, verificación y cierre ([registro](evidencias/hallazgo-firebase-api-key.md#registro-del-cambio)) |
 | Gestión de riesgos | Cada hallazgo se trató con una de las estrategias vistas en clase: eliminar (corregir dependencias), minimizar (restringir la key) o aceptar con justificación (`minimatch`, `uuid` y vulnerabilidades del sistema sin corrección de Debian) |
 | Mejora continua | El escaneo semanal detecta CVE nuevas sin cambios de código, y Dependabot propone las actualizaciones. Las 9 actualizaciones de Python que propuso se integraron en un solo cambio probado ([#48](https://github.com/ai-project-u1g/ai-assisted-news-app/pull/48)) en lugar de 9 despliegues separados, y las del frontend agrupadas en [#41](https://github.com/ai-project-u1g/ai-assisted-news-app/pull/41) |
 
@@ -200,6 +203,28 @@ Security; un hallazgo alto con corrección bloquea el pipeline hasta resolverlo.
 
 *Figura 18. Secret scanning sin alertas abiertas.*
 
+### Protección de `main`
+
+![Ruleset main-protegida activo](evidencias/ruleset-1-lista-activo.png)
+
+*Figura 19. Ruleset `main-protegida` activo: 4 reglas sobre 1 rama.*
+
+![Objetivo y lista de excepciones del ruleset](evidencias/ruleset-2-objetivo-y-bypass.png)
+
+*Figura 20. Estado Active, lista de excepciones vacía y objetivo `main`.*
+
+![Reglas activadas](evidencias/ruleset-3-reglas.png)
+
+*Figura 21. Reglas activadas: impedir borrado, pull request obligatorio, status checks y bloqueo de force push.*
+
+![Reglas del pull request](evidencias/ruleset-4-pull-request.png)
+
+*Figura 22. Pull request: una aprobación, descartar aprobaciones viejas, code owners, aprobación del último push y conversaciones resueltas.*
+
+![Checks obligatorios](evidencias/ruleset-5-status-checks.png)
+
+*Figura 23. Los 9 checks obligatorios, todos con fuente GitHub Actions.*
+
 Las evidencias de la API key (restricción, login en web y Android) están en el
 [documento del hallazgo](evidencias/hallazgo-firebase-api-key.md).
 
@@ -207,11 +232,10 @@ Las evidencias de la API key (restricción, login en web y Android) están en el
 
 | Prioridad | Mejora | Cómo |
 | :---: | --- | --- |
-| 1 | Proteger `main` | Ruleset con pull request obligatorio, una aprobación y los checks de `security` en verde, más bloqueo de force push y borrado, y `CODEOWNERS` para exigir revisión en `.github/`, `deploy/` y la configuración de seguridad. Se aplica al cerrar la entrega: mientras el equipo completa el plan, integra documentación directo a `main` y el ruleset lo bloquearía |
-| 2 | Que el deploy espere a `security` | Hoy `deploy.yml` despliega en cada push a `main` aunque `security` falle. Con el ruleset ya no entra código sin checks; además, el job de deploy puede depender del resultado de `security` (`workflow_run`) |
-| 3 | Desactivar `/docs` y `/openapi.json` en producción | Lo exige el ADR 0001 y hoy responden 200 en Cloud Run. `docs_url=None` y `openapi_url=None` fuera del entorno local |
-| 4 | Restringir la Browser key de Firebase | Limitarla a los dominios de Firebase Hosting (referrers HTTP) |
-| 5 | Fijar dependencias de Python | Lockfile con hashes (`pip-compile --generate-hashes`) para builds reproducibles |
-| 6 | Monitoreo de seguridad en ejecución (DevSecMonOps) | Alertas de Cloud Monitoring por picos de 401/429 y de costo en la API del chat; rate limit en `/chat` |
-| 7 | Cadena de suministro | SBOM y firma de imágenes en Artifact Registry (Trivy SBOM + cosign) |
-| 8 | Migrar de SDK de Expo | Cierra `minimatch` y `uuid`, hoy aceptadas como riesgo |
+| 1 | Que el deploy espere a `security` | Con el ruleset ya no entra código sin checks por pull request. Como defensa en profundidad, el job de deploy puede depender además del resultado de `security` (`workflow_run`) |
+| 2 | Desactivar `/docs` y `/openapi.json` en producción | Lo exige el ADR 0001 y hoy responden 200 en Cloud Run. `docs_url=None` y `openapi_url=None` fuera del entorno local |
+| 3 | Restringir la Browser key de Firebase | Limitarla a los dominios de Firebase Hosting (referrers HTTP) |
+| 4 | Fijar dependencias de Python | Lockfile con hashes (`pip-compile --generate-hashes`) para builds reproducibles |
+| 5 | Monitoreo de seguridad en ejecución (DevSecMonOps) | Alertas de Cloud Monitoring por picos de 401/429 y de costo en la API del chat; rate limit en `/chat` |
+| 6 | Cadena de suministro | SBOM y firma de imágenes en Artifact Registry (Trivy SBOM + cosign) |
+| 7 | Migrar de SDK de Expo | Cierra `minimatch` y `uuid`, hoy aceptadas como riesgo |
