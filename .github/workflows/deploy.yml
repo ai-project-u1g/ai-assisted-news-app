@@ -107,7 +107,7 @@ jobs:
         with:
           workload_identity_provider: ${{ env.WIF_PROVIDER }}
           service_account: ${{ env.DEPLOYER_SA }}
-      - uses: google-github-actions/setup-gcloud@v2
+      - uses: google-github-actions/setup-gcloud@v3
       - name: Publicar API y chatbot en Cloud Run
         run: bash deploy/gcp/deploy.sh
       - name: Renovar credenciales para Hosting
