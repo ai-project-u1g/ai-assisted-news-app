@@ -159,27 +159,31 @@ Security; un hallazgo alto con corrección bloquea el pipeline hasta resolverlo.
 
 *Figura 9. PR #44: verificación de login, reporte DAST y falsos positivos de gitleaks resueltos.*
 
+![Checks del PR #45 en verde](evidencias/pipeline-despues-checks-pr45.png)
+
+*Figura 10. PR #45: excepción de gitleaks por patrón; el job de secretos vuelve a verde en todas las ramas.*
+
 ![Resumen del reporte de ZAP](evidencias/dast/zap-reporte-resumen.png)
 
-*Figura 10. Reporte de ZAP: 0 alertas altas, medias y bajas. Reporte completo en [HTML](evidencias/dast/zap-report.html) y [PDF](evidencias/dast/zap-reporte.pdf).*
+*Figura 11. Reporte de ZAP: 0 alertas altas, medias y bajas. Reporte completo en [HTML](evidencias/dast/zap-report.html) y [PDF](evidencias/dast/zap-reporte.pdf).*
 
 ### Estado final
 
 ![Alertas de Dependabot después](evidencias/dependabot-despues-alertas.png)
 
-*Figura 11. Dependabot con 77 alertas cerradas por las correcciones.*
+*Figura 12. Dependabot con 77 alertas cerradas por las correcciones.*
 
 ![Alerta de minimatch descartada](evidencias/dependabot-descartada-minimatch.png)
 
-*Figura 12. `minimatch` descartada como riesgo tolerable, con justificación.*
+*Figura 13. `minimatch` descartada como riesgo tolerable, con justificación.*
 
 ![Alerta de uuid descartada](evidencias/dependabot-descartada-uuid.png)
 
-*Figura 13. `uuid` descartada como código vulnerable no usado, con justificación.*
+*Figura 14. `uuid` descartada como código vulnerable no usado, con justificación.*
 
 ![Secret scanning sin alertas abiertas](evidencias/secret-scanning-despues-sin-abiertas.png)
 
-*Figura 14. Secret scanning sin alertas abiertas.*
+*Figura 15. Secret scanning sin alertas abiertas.*
 
 Las evidencias de la API key (restricción, login en web y Android) están en el
 [documento del hallazgo](evidencias/hallazgo-firebase-api-key.md).
