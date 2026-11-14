@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI News · ITIL y DevOps</title>
+<style>
+:root{
+  --green:#22C55E; --red:#EF4444;
+  --bg:#F5F7F6; --surface:#FFFFFF; --ink:#17191C; --muted:#5A636E; --line:#E2E6EA;
+  --green-ink:#15803D; --red-ink:#B91C1C;
+  --green-soft:rgba(34,197,94,.12); --red-soft:rgba(239,68,68,.10);
+  --shadow:0 2px 12px rgba(17,24,39,.06);
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#111316; --surface:#191C20; --ink:#ECEEF0; --muted:#9AA3AE; --line:#2A2F35;
+    --green-ink:#4ADE80; --red-ink:#F87171; --shadow:0 2px 12px rgba(0,0,0,.35);
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--sans)}
+body{overflow:hidden}
+.stage{position:fixed;inset:0;display:grid;place-items:center}
+.deck{position:relative;width:1280px;height:720px;transform-origin:center;flex:none}
+
+/* Fondo con 3 capas de parallax */
+.layer{position:absolute;inset:-80px;pointer-events:none;transition:transform 400ms cubic-bezier(.2,.8,.2,1);will-change:transform}
+.layer svg{width:100%;height:100%}
+.l1{opacity:.55}.l2{opacity:.35}.l3{opacity:.25}
+
+.slide{position:absolute;inset:0;padding:56px 72px;display:grid;grid-template-rows:auto 1fr auto;
+  opacity:0;transform:translateX(40px);transition:opacity 300ms ease,transform 300ms ease;pointer-events:none}
+.slide.active{opacity:1;transform:none;pointer-events:auto}
+.slide.prev{transform:translateX(-40px)}
+
+.eyebrow{font-size:13px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;gap:12px;align-items:center}
+.eyebrow .tag{color:var(--green-ink);background:var(--green-soft);padding:4px 10px;border-radius:999px;letter-spacing:.04em}
+h1{font-size:64px;line-height:1.05;margin:0;font-weight:700;letter-spacing:-.02em;max-width:14ch}
+h2{font-size:40px;line-height:1.12;margin:14px 0 0;font-weight:700;letter-spacing:-.015em;max-width:22ch}
+.body{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;min-height:0;padding-top:24px}
+.body.flip .visual{order:-1}
+ul.points{list-style:none;margin:0;padding:0;display:grid;gap:18px}
+ul.points li{font-size:22px;line-height:1.4;padding-left:28px;position:relative}
+ul.points li::before{content:"";position:absolute;left:0;top:.55em;width:10px;height:10px;border-radius:3px;background:var(--green)}
+ul.points li.bad::before{background:var(--red)}
+.mono{font-family:var(--mono);font-size:.86em}
+.foot{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);font-family:var(--mono)}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);transition:transform 200ms ease,box-shadow 200ms ease}
+.card:hover{transform:scale(1.03);box-shadow:0 10px 28px rgba(17,24,39,.12)}
+.shot{padding:8px;max-height:470px;overflow:hidden}
+.shot img{display:block;width:100%;height:100%;max-height:452px;object-fit:cover;object-position:top;border-radius:8px}
+.shot.contain img{object-fit:contain}
+.cap{font-size:13px;color:var(--muted);margin-top:10px}
+
+.flow{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.chip{padding:10px 14px;border-radius:10px;background:var(--surface);border:1px solid var(--line);font-size:16px;font-weight:500;box-shadow:var(--shadow)}
+.chip.ok{border-color:var(--green);color:var(--green-ink)}
+.chip.stop{border-color:var(--red);color:var(--red-ink)}
+.arrow{color:var(--muted);font-family:var(--mono)}
+
+.stats{display:grid;gap:16px}
+.stat{padding:18px 22px}
+.stat .num{font-size:44px;font-weight:700;letter-spacing:-.02em}
+.stat .lbl{font-size:15px;color:var(--muted);margin-top:4px}
+.bars{display:grid;gap:16px;padding:22px}
+.bar .row{display:flex;justify-content:space-between;font-size:15px;margin-bottom:6px}
+.bar .track{height:14px;border-radius:7px;background:var(--line);overflow:hidden}
+.bar .fill{height:100%;border-radius:7px;background:var(--red);transform-origin:left;transition:transform 900ms cubic-bezier(.2,.8,.2,1)}
+.bar .fill.g{background:var(--green)}
+.slide:not(.active) .bar .fill{transform:scaleX(0)}
+
+.arch{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:20px}
+.arch .chip{text-align:center}
+.arch .wide{grid-column:span 2}
+
+.team{display:grid;grid-template-columns:1fr 1fr;gap:10px 28px;font-size:18px}
+.team span{color:var(--muted);font-size:14px;display:block}
+a{color:var(--green-ink)}
+
+/* Entradas: fade + translateY 16px, cascada de 120ms */
+[data-anim]{opacity:0;transform:translateY(16px)}
+.slide.active [data-anim]{animation:enter 540ms ease-out forwards;animation-delay:calc(var(--i,0) * 120ms)}
+@keyframes enter{to{opacity:1;transform:none}}
+
+.nav{position:fixed;bottom:18px;right:24px;display:flex;gap:8px;z-index:100}
+.nav button{font:600 14px var(--sans);padding:10px 14px;border-radius:12px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;transition:transform 200ms,background 200ms}
+.nav button:hover{background:var(--green-soft)}
+.nav button:active{transform:translateY(1px)}
+.nav button:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.progress{position:fixed;left:0;top:0;height:3px;background:var(--green);transform-origin:left;transition:transform 300ms ease;z-index:100;width:100%}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  [data-anim]{opacity:1;transform:none}
+  .slide:not(.active) .bar .fill{transform:none}
+}
+@page{size:1280px 720px;margin:0}
+@media print{
+  html,body{height:auto;overflow:visible;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .stage{position:static;display:block}
+  .deck{transform:none!important;width:1280px;height:auto}
+  .slide{position:relative;width:1280px;height:720px;opacity:1;transform:none;break-after:page;overflow:hidden;background:var(--bg)}
+  [data-anim]{opacity:1;transform:none;animation:none}
+  .slide .bar .fill{transform:none!important}
+  .layer,.nav,.progress{display:none}
+  .card:hover{transform:none}
+}
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="stage">
+<div class="deck" id="deck">
+
+  <div class="layer l1" id="l1"><svg viewBox="0 0 1440 880" preserveAspectRatio="none"><circle cx="1240" cy="120" r="220" fill="var(--green-soft)"/></svg></div>
+  <div class="layer l2" id="l2"><svg viewBox="0 0 1440 880" preserveAspectRatio="none"><circle cx="160" cy="820" r="260" fill="var(--green-soft)"/></svg></div>
+  <div class="layer l3" id="l3"><svg viewBox="0 0 1440 880" preserveAspectRatio="none"><path d="M0 700 C 400 600, 900 820, 1440 640" stroke="var(--green)" stroke-width="2" fill="none"/></svg></div>
+
+  <!-- 1 Portada -->
+  <section class="slide">
+    <div class="eyebrow" data-anim><span class="tag">Plan ITIL y DevOps</span> AI Assisted News App</div>
+    <div class="body">
+      <div>
+        <h1 data-anim style="--i:1">Del commit a producción con ITIL y DevOps</h1>
+        <p data-anim style="--i:2;font-size:20px;color:var(--muted)">Siete prácticas aplicadas en una app real, con evidencia.</p>
+      </div>
+      <div class="card" data-anim style="--i:3;padding:24px">
+        <div class="team">
+          <div>Gustavo Adolfo Cruz Bardales<span>CI y pruebas</span></div>
+          <div>Pedro Pablo Guzmán Mayen<span>Despliegue continuo</span></div>
+          <div>Mathew Alexander Cordero Aquino<span>Configuración y FinOps</span></div>
+          <div>José Luis Gramajo<span>Versionamiento con Git</span></div>
+          <div>Josué Say<span>Seguridad DevSecOps</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span>13 de noviembre de 2026</span><span>github.com/ai-project-u1g/ai-assisted-news-app</span></div>
+  </section>
+
+  <!-- 2 Proyecto -->
+  <section class="slide">
+    <div><div class="eyebrow" data-anim>El proyecto</div><h2 data-anim style="--i:1">Una app de noticias con chat, ya publicada</h2></div>
+    <div class="body">
+      <ul class="points">
+        <li data-anim style="--i:2">Web en Firebase Hosting y APK Android, login con Firebase</li>
+        <li data-anim style="--i:3"><span class="mono">news-api</span> y <span class="mono">news-chatbot</span> en Cloud Run</li>
+        <li data-anim style="--i:4">MongoDB Atlas para noticias, usuarios y sesiones de chat</li>
+        <li data-anim style="--i:5">El chat usa OpenAI con un tope de USD 20</li>
+      </ul>
+      <div class="card shot contain" data-anim style="--i:3">
+        <img src="../02-cd/evidencias/app-cd-antes-funcionando.png" alt="Sitio publicado en Firebase Hosting">
+      </div>
+    </div>
+    <div class="foot"><span>adfasdfasfd-1899a.web.app</span><span>02</span></div>
+  </section>
+
+  <!-- 3 CI -->
+  <section class="slide">
+    <div><div class="eyebrow" data-anim><span class="tag">1 · CI</span> Gustavo Cruz</div><h2 data-anim style="--i:1">Cada cambio pasa por dos jobs automáticos</h2></div>
+    <div class="body">
+      <ul class="points">
+        <li data-anim style="--i:2">GitHub Actions corre en cada PR y cada push a <span class="mono">main</span></li>
+        <li data-anim style="--i:3"><span class="mono">test</span>: pytest, scripts de deploy e integración con MongoDB</li>
+        <li data-anim style="--i:4"><span class="mono">frontend</span>: TypeScript, Vitest y export web</li>
+        <li data-anim style="--i:5">Si uno falla, el despliegue no corre</li>
+      </ul>
+      <div>
+        <div class="card shot" data-anim style="--i:3;height:420px"><img src="../01-ci/evidencias/github-ci-actions-jobs-verdes.png" alt="Jobs test y frontend en verde"></div>
+        <div class="cap" data-anim style="--i:4">Run 43552233962: test en 1 min 4 s, frontend en 47 s.</div>
+      </div>
+    </div>
+    <div class="foot"><span>.github/workflows/deploy.yml</span><span>03</span></div>
+  </section>
+
+  <!-- 4 CD flujo -->
+  <section class="slide">
+    <div><div class="eyebrow" data-anim><span class="tag">2 · CD</span> Pedro Guzmán</div><h2 data-anim style="--i:1">Un push a main publica las cuatro piezas</h2></div>
+    <div class="body flip">
+      <ul class="points">
+        <li data-anim style="--i:2">Cloud Run en <span class="mono">us-east4</span> para la API y el chat</li>
+        <li data-anim style="--i:3">Firebase Hosting para la web y EAS para el APK</li>
+        <li data-anim style="--i:4">Credenciales temporales con Workload Identity, sin llaves JSON</li>
+        <li data-anim style="--i:5">Al final verifica imagen del commit, <span class="mono">/health</span> y sitio</li>
+      </ul>
+      <div class="card" data-anim style="--i:3;padding:24px">
+        <div class="flow">
+          <span class="chip">push a main</span><span class="arrow">→</span>
+          <span class="chip ok">test + frontend</span><span class="arrow">→</span>
+          <span class="chip">config</span><span class="arrow">→</span>
+          <span class="chip">APK</span><span class="arrow">→</span>
+          <span class="chip">Cloud Run</span><span class="arrow">→</span>
+          <span class="chip">Hosting</span><span class="arrow">→</span>
+          <span class="chip ok">verificación</span>
+        </div>
+        <div class="stats" style="grid-template-columns:1fr 1fr;margin-top:22px">
+          <div class="card stat"><div class="num">13 min</div><div class="lbl">de main a producción, 70 % es el APK</div></div>
+          <div class="card stat"><div class="num">82 %</div><div class="lbl">runs exitosos, 9 de 11</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span>deploy/gcp/deploy.sh · deploy/smoke-test.sh</span><span>04</span></div>
+  </section>
+
+  <!-- 5 CD resultados -->
+  <section class="slide">
+    <div><div class="eyebrow" data-anim><span class="tag">2 · CD</span> Pedro Guzmán</div><h2 data-anim style="--i:1">Menos despliegues inútiles, fallas visibles al momento</h2></div>
+    <div class="body">
+      <ul class="points">
+        <li data-anim style="--i:2">16 de 24 pushes desplegaban sin cambiar la app</li>
+        <li data-anim style="--i:3">Filtro de rutas: cambios de docs ya no despliegan</li>
+        <li class="bad" data-anim style="--i:4">La verificación detectó un despliegue a medias del chatbot</li>
+        <li data-anim style="--i:5">Volver atrás quedó documentado con comandos</li>
+      </ul>
+      <div class="card bars" data-anim style="--i:3">
+        <div class="bar"><div class="row"><span>Despliegues sin cambios, antes</span><b>16 de 24</b></div><div class="track"><div class="fill" style="width:66.7%"></div></div></div>
+        <div class="bar"><div class="row"><span>Después del filtro, simulado</span><b>0</b></div><div class="track"><div class="fill g" style="width:1%"></div></div></div>
+        <div class="bar"><div class="row"><span>Tests de scripts de despliegue</span><b>9 → 10</b></div><div class="track"><div class="fill g" style="width:100%"></div></div></div>
+      </div>
+    </div>
+    <div class="foot"><span>02-cd/evidencias/linea-base-2026-11-13.md</span><span>05</span></div>
+  </section>
+
+  <!-- 6 Pruebas -->
+  <section class="slide">
+    <div><div class="eyebrow" data-anim><span class="tag">3 · Pruebas</span> Gustavo Cruz</div><h2 data-anim style="--i:1">511 pruebas automáticas, tres casos documentados</h2></div>
+    <div class="body flip">
+      <ul class="points">
+        <li data-anim style="--i:2">430 en backend con pytest, 81 en frontend con Vitest</li>
+        <li data-anim style="--i:3">Artículo corto: leído a los 5 segundos activos</li>
+        <li data-anim style="--i:4">300 palabras dan 2 minutos de lectura</li>
+        <li data-anim style="--i:5">El chat restaura solo conversaciones vigentes del usuario</li>
+      </ul>
+      <div>
+        <div class="card shot contain" data-anim style="--i:3"><img src="../03-pruebas/evidencias/terminal-pytest-430-aprobadas.png" alt="pytest 430 aprobadas"></div>
+        <div class="cap" data-anim style="--i:4">Vitest usa la misma sintaxis de Jest: describe, it y expect.</div>
+      </div>
+    </div>
+    <div class="foot"><span>npm test · pytest assistant/tests news/tests</span><span>06</span></div>
+  </section>
+
+  <!-- 7 Configuración -->
+  <section class="slide">
+    <div><div class="eyebrow" data-anim><span class="tag">4 · Configuración</span> Mathew Cordero</div><h2 data-anim style="--i:1">Ningún secreto vive en el repositorio</h2></div>
+    <div class="body">
+      <ul class="points">
+        <li data-anim style="--i:2">Local: <span class="mono">.env</span> sin secretos, credenciales en <span class="mono">keys/</span></li>
+        <li data-anim style="--i:3">GitHub <span class="mono">production</span>: proyecto, región, precios y Firebase público</li>
+        <li data-anim style="--i:4">Secret Manager guarda la URI de MongoDB y la key de OpenAI</li>
+        <li data-anim style="--i:5">Cloud Run las monta como archivos en <span class="mono">/secrets</span></li>
+      </ul>
+      <div class="card shot contain" data-anim style="--i:3"><img src="../04-configuracion/evidencias/secret-manager-secrets.png" alt="Secretos en Secret Manager sin valores"></div>
+    </div>
+    <div class="foot"><span>.env.example · deploy/gcp/config.sh</span><span>07</span></div>
+  </section>
+
+  <!-- 8 Git -->
+  <section class="slide">
+    <div><div class="eyebrow" data-anim><span class="tag">5 · Git</span> José Luis Gramajo</div><h2 data-anim style="--i:1">GitHub Flow, y main ya no acepta atajos</h2></div>
+    <div class="body flip">
+      <ul class="points">
+        <li data-anim style="--i:2">Una rama por funcionalidad, integración por pull request</li>
+        <li data-anim style="--i:3">Ruleset: una aprobación, code owners y checks en verde</li>
+        <li data-anim style="--i:4">Conventional Commits en el 68 % del historial</li>
+        <li class="bad" data-anim style="--i:5">Pendiente: etiqueta <span class="mono">v1.0.0</span> para la entrega</li>
+      </ul>
+      <div>
+        <div class="card shot contain" data-anim style="--i:3"><img src="../06-seguridad/evidencias/ruleset-6-pr51-bloqueado.png" alt="PR 51 bloqueado por el ruleset"></div>
+        <div class="cap" data-anim style="--i:4">El PR #51 quedó bloqueado hasta cumplir las reglas.</div>
+      </div>
+    </div>
+    <div class="foot"><span>ruleset main-protegida · .github/CODEOWNERS</span><span>08</span></div>
+  </section>
+
+  <!-- 9 Seguridad -->
+  <section class="slide">
+    <div><div class="eyebrow" data-anim><span class="tag">6 · DevSecOps</span> Josué Say</div><h2 data-anim style="--i:1">Siete controles automáticos, cero alertas abiertas</h2></div>
+    <div class="body">
+      <ul class="points">
+        <li data-anim style="--i:2">CodeQL, gitleaks, Trivy, pip-audit y OWASP ZAP</li>
+        <li data-anim style="--i:3">Corren en cada PR, en <span class="mono">main</span> y cada lunes</li>
+        <li data-anim style="--i:4">Trivy encontró paquetes vulnerables dentro de la imagen</li>
+        <li data-anim style="--i:5">Key de Firebase limitada a la app y 3 APIs</li>
+      </ul>
+      <div class="card bars" data-anim style="--i:3">
+        <div class="bar"><div class="row"><span>Dependabot, antes</span><b>78</b></div><div class="track"><div class="fill" style="width:100%"></div></div></div>
+        <div class="bar"><div class="row"><span>Code scanning, antes</span><b>18</b></div><div class="track"><div class="fill" style="width:23%"></div></div></div>
+        <div class="bar"><div class="row"><span>Secret scanning, antes</span><b>1</b></div><div class="track"><div class="fill" style="width:2%"></div></div></div>
+        <div class="bar"><div class="row"><span>Alertas abiertas, después</span><b>0</b></div><div class="track"><div class="fill g" style="width:1%"></div></div></div>
+      </div>
+    </div>
+    <div class="foot"><span>.github/workflows/security.yml</span><span>09</span></div>
+  </section>
+
+  <!-- 10 FinOps -->
+  <section class="slide">
+    <div><div class="eyebrow" data-anim><span class="tag">7 · FinOps</span> Mathew Cordero</div><h2 data-anim style="--i:1">Octubre costó USD 3.69 entre nube e IA</h2></div>
+    <div class="body flip">
+      <ul class="points">
+        <li data-anim style="--i:2">Google Cloud USD 2.15: la IP de NAT fue USD 2.10</li>
+        <li data-anim style="--i:3">Cloud Run escala a cero: USD 0 netos</li>
+        <li data-anim style="--i:4">OpenAI USD 1.54, presupuesto funcional de USD 20</li>
+        <li data-anim style="--i:5">Piloto: 1,200 tokens de salida, meta 10 % menos</li>
+      </ul>
+      <div class="card bars" data-anim style="--i:3">
+        <div class="bar"><div class="row"><span>IP de Cloud NAT</span><b>USD 2.10</b></div><div class="track"><div class="fill" style="width:100%"></div></div></div>
+        <div class="bar"><div class="row"><span>OpenAI</span><b>USD 1.54</b></div><div class="track"><div class="fill g" style="width:73%"></div></div></div>
+        <div class="bar"><div class="row"><span>Resto de Google Cloud</span><b>USD 0.05</b></div><div class="track"><div class="fill g" style="width:3%"></div></div></div>
+        <div class="bar"><div class="row"><span>Cloud Run neto</span><b>USD 0.00</b></div><div class="track"><div class="fill g" style="width:1%"></div></div></div>
+        <div class="cap">Presupuesto de Google: USD 25, avisos al 50, 90 y 100 %.</div>
+      </div>
+    </div>
+    <div class="foot"><span>Costos reales del 1 al 31 de octubre de 2026</span><span>10</span></div>
+  </section>
+
+  <!-- 11 ITIL -->
+  <section class="slide">
+    <div><div class="eyebrow" data-anim>Relación con ITIL</div><h2 data-anim style="--i:1">Cuatro prácticas ITIL ordenan el flujo</h2></div>
+    <div class="body">
+      <ul class="points">
+        <li data-anim style="--i:2">Habilitación de cambios: todo entra por PR con checks</li>
+        <li data-anim style="--i:3">Gestión de despliegues: un solo camino a producción</li>
+        <li data-anim style="--i:4">Seguridad de la información: escaneo por PR y semanal</li>
+        <li data-anim style="--i:5">Mejora continua: líneas base medidas antes y después</li>
+      </ul>
+      <div class="card" data-anim style="--i:3;padding:24px">
+        <div class="flow">
+          <span class="chip">Solicitud: PR</span><span class="arrow">→</span>
+          <span class="chip">Evaluación: checks</span><span class="arrow">→</span>
+          <span class="chip">Aprobación: revisión</span><span class="arrow">→</span>
+          <span class="chip">Despliegue</span><span class="arrow">→</span>
+          <span class="chip ok">Verificación</span><span class="arrow">→</span>
+          <span class="chip">Medición</span>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span>Cada apartado documenta su práctica ITIL</span><span>11</span></div>
+  </section>
+
+  <!-- 12 Ventajas -->
+  <section class="slide">
+    <div><div class="eyebrow" data-anim>Análisis · ventajas</div><h2 data-anim style="--i:1">El pipeline frenó fallas antes de producción</h2></div>
+    <div class="body flip">
+      <ul class="points">
+        <li data-anim style="--i:2">CI rechazó 2 PR de Dependabot incompatibles con Expo</li>
+        <li data-anim style="--i:3">Trivy vio en la imagen lo que pip-audit no veía</li>
+        <li data-anim style="--i:4">La imagen de <span class="mono">news-api</span> bajó de 308 a 284 MB</li>
+        <li data-anim style="--i:5">Cada cambio queda con evidencia y línea base</li>
+      </ul>
+      <div class="stats" data-anim style="--i:3;grid-template-columns:1fr 1fr">
+        <div class="card stat"><div class="num">511</div><div class="lbl">pruebas en cada PR</div></div>
+        <div class="card stat"><div class="num">7</div><div class="lbl">controles de seguridad</div></div>
+        <div class="card stat"><div class="num">0</div><div class="lbl">alertas abiertas</div></div>
+        <div class="card stat"><div class="num">USD 3.69</div><div class="lbl">costo de octubre</div></div>
+      </div>
+    </div>
+    <div class="foot"><span>09-reflexion</span><span>12</span></div>
+  </section>
+
+  <!-- 13 Retos -->
+  <section class="slide">
+    <div><div class="eyebrow" data-anim>Análisis · retos</div><h2 data-anim style="--i:1">Falsos positivos y coordinación costaron más</h2></div>
+    <div class="body">
+      <ul class="points">
+        <li class="bad" data-anim style="--i:2">gitleaks marcó un nombre de contenedor como secreto</li>
+        <li class="bad" data-anim style="--i:3">minimatch y uuid sin corrección compatible con Expo 57</li>
+        <li class="bad" data-anim style="--i:4">El chatbot no arrancó en dos despliegues</li>
+        <li class="bad" data-anim style="--i:5">Cinco personas subiendo a main antes del ruleset</li>
+      </ul>
+      <div class="card" data-anim style="--i:3;padding:24px">
+        <div class="flow">
+          <span class="chip stop">Revisión nueva no arranca</span><span class="arrow">→</span>
+          <span class="chip ok">Cloud Run mantiene la anterior</span><span class="arrow">→</span>
+          <span class="chip">Run en rojo y aviso</span>
+        </div>
+        <div class="cap" style="margin-top:16px">Producción siguió respondiendo; quedaron dos versiones activas.</div>
+      </div>
+    </div>
+    <div class="foot"><span>09-reflexion · 02-cd</span><span>13</span></div>
+  </section>
+
+  <!-- 14 Mejoras -->
+  <section class="slide">
+    <div><div class="eyebrow" data-anim>Análisis · mejoras</div><h2 data-anim style="--i:1">Lo siguiente: monitorear, etiquetar y medir</h2></div>
+    <div class="body flip">
+      <ul class="points">
+        <li data-anim style="--i:2">DevSecMonOps: alertas por 401, 429 y costo del chat</li>
+        <li data-anim style="--i:3">Automatización: tag <span class="mono">v1.0.0</span> y CHANGELOG desde los commits</li>
+        <li data-anim style="--i:4">CD: reintentar MongoDB al arrancar el chatbot</li>
+        <li data-anim style="--i:5">FinOps: medir el piloto de tokens y revisar NAT</li>
+      </ul>
+      <div class="stats" data-anim style="--i:3">
+        <div class="card stat"><div class="num">1 semana</div><div class="lbl">tag, /docs fuera de producción, key web</div></div>
+        <div class="card stat"><div class="num">2 semanas</div><div class="lbl">alertas, rate limit en /chat, lockfile</div></div>
+        <div class="card stat"><div class="num">1 mes</div><div class="lbl">SBOM y firma de imágenes</div></div>
+      </div>
+    </div>
+    <div class="foot"><span>Prioridades de 05-git, 06-seguridad y 07-finops</span><span>14</span></div>
+  </section>
+
+  <!-- 15 Cierre -->
+  <section class="slide">
+    <div><div class="eyebrow" data-anim>Pruébenlo</div><h2 data-anim style="--i:1">Abran la app y revisen el pipeline</h2></div>
+    <div class="body">
+      <ul class="points">
+        <li data-anim style="--i:2">App: <a href="https://adfasdfasfd-1899a.web.app">adfasdfasfd-1899a.web.app</a></li>
+        <li data-anim style="--i:3">Repositorio: <a href="https://github.com/ai-project-u1g/ai-assisted-news-app">ai-project-u1g/ai-assisted-news-app</a></li>
+        <li data-anim style="--i:4">Evidencias en <span class="mono">docs/deploy/plan-itil-devops</span></li>
+      </ul>
+      <div class="card" data-anim style="--i:3;padding:28px;font-size:26px;line-height:1.35;font-weight:600">
+        ¿Qué control agregarían primero a su propio proyecto?
+      </div>
+    </div>
+    <div class="foot"><span>Gracias</span><span>15</span></div>
+  </section>
+
+</div>
+</div>
+<div class="nav"><button id="prevBtn" aria-label="Diapositiva anterior">Anterior</button><button id="nextBtn" aria-label="Diapositiva siguiente">Siguiente</button></div>
+<script>
+const slides=[...document.querySelectorAll('.slide')];
+const deck=document.getElementById('deck');
+const layers=[['l1',18],['l2',36],['l3',60]];
+let cur=0;
+function fit(){const s=Math.min(innerWidth/1280,innerHeight/720);deck.style.transform=`scale(${s})`}
+function show(n){
+  cur=Math.max(0,Math.min(slides.length-1,n));
+  slides.forEach((s,i)=>{s.classList.toggle('active',i===cur);s.classList.toggle('prev',i<cur)});
+  layers.forEach(([id,k])=>document.getElementById(id).style.transform=`translateX(${-cur*k}px)`);
+  document.getElementById('progress').style.transform=`scaleX(${(cur+1)/slides.length})`;
+  history.replaceState(null,'','#'+(cur+1));
+}
+addEventListener('keydown',e=>{
+  if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();show(cur+1)}
+  if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();show(cur-1)}
+  if(e.key==='Home')show(0); if(e.key==='End')show(slides.length-1);
+});
+document.getElementById('nextBtn').onclick=()=>show(cur+1);
+document.getElementById('prevBtn').onclick=()=>show(cur-1);
+addEventListener('resize',fit);
+fit();show((parseInt(location.hash.slice(1))||1)-1);
+</script>
+</body>
+</html>
