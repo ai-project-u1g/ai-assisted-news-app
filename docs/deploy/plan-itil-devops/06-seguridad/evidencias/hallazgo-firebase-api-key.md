@@ -54,11 +54,21 @@ cualquier cliente.
 | Usuarios de Firebase Authentication desconocidos | Mathew Cordero | Pendiente |
 | Cargos inesperados en facturación del proyecto | Mathew Cordero | Pendiente |
 
+## Decisión
+
+El 13 de noviembre de 2026 el equipo (Mathew Cordero, responsable de Firebase) decidió mantener
+`frontend/google-services.json` en el repositorio. Es configuración pública del APK, no una
+contraseña, y el build de CI la necesita. El control efectivo es restringir la key en Google Cloud.
+
 ## Propuesta
 
 | Prioridad | Medida | Detalle |
 | :---: | --- | --- |
-| 1 | Restringir la key | Restricción de aplicación Android con el paquete `com.aina.news` y el SHA-1 del certificado de EAS. Limitar las APIs a las que la app realmente necesita en Android. Es el control efectivo, porque la key seguirá dentro del APK. |
-| 2 | Quitar el archivo del repositorio | `git rm --cached frontend/google-services.json` y agregar `frontend/google-services.json` a `.gitignore`. En CI, guardar el contenido como secreto del entorno `production` (por ejemplo, en base64) y escribir el archivo antes de `deploy/expo/build-ci.sh`. Para builds locales, cada integrante lo descarga de la consola de Firebase. Actualizar `docs/deploy/android-apk-paso-a-paso.md`. |
-| 3 | Rotar la key | Quitar el archivo del árbol no lo borra del historial público (`27f8cec`). Si las métricas muestran uso ajeno, crear una key nueva restringida, regenerar `google-services.json` y eliminar la anterior. |
-| 4 | Cerrar la alerta #1 | Tras aplicar las medidas 1 y 2, cerrar la alerta de secret scanning con la justificación de este documento. |
+| 1 | Restringir la key | Restricción de aplicación Android con el paquete `com.aina.news` y el SHA-1 del certificado de EAS. Limitar las APIs a las que la app realmente necesita en Android, en lugar de las 27 actuales. Es el control efectivo, porque la key seguirá dentro del APK. |
+| 2 | Cerrar la alerta #1 | Tras restringir la key, cerrar la alerta de secret scanning como «se usa en configuración pública» con la justificación de este documento. |
+| 3 | Rotar la key | Solo si las métricas muestran uso ajeno: crear una key nueva restringida, regenerar `google-services.json` y eliminar la anterior. Sigue en el historial público (`27f8cec`). |
+
+Alternativa considerada y descartada por ahora: quitar el archivo del repositorio con
+`git rm --cached` y `.gitignore`, y entregarlo al CI como secreto del entorno `production` antes de
+`deploy/expo/build-ci.sh`. No elimina el riesgo, porque la key ya está en el historial público y
+dentro del APK, y además agrega un paso manual para cada build local.
