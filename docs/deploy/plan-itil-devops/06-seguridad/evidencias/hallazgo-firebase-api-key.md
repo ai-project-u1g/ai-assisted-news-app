@@ -37,7 +37,7 @@ lectura:
 | --- | --- |
 | Restricción de aplicación (paquete Android + SHA-1) | Ninguna: `androidKeyRestrictions: {}` |
 | Restricción de APIs | 27 APIs de Firebase y Google Cloud, entre ellas `identitytoolkit`, `securetoken`, `firestore`, `firebasestorage`, `sqladmin` y `logging` |
-| Uso en la app | El archivo configura Google Sign-In en Android (`GoogleOneTapSignIn.configure({ webClientId: "autoDetect" })` en `frontend/src/services/androidGoogleSignIn.android.ts`). Firebase Authentication en JavaScript usa otra key, la de la app web (`EXPO_PUBLIC_FIREBASE_API_KEY`) |
+| Uso en la app | El archivo configura Google Sign-In en Android (`GoogleOneTapSignIn.configure({ webClientId: "autoDetect" })` en `frontend/src/services/androidGoogleSignIn.android.ts`). Firebase Authentication en JavaScript usa otra key: `EXPO_PUBLIC_FIREBASE_API_KEY` corresponde a la «Browser key (auto created by Firebase)», verificado con `gcloud services api-keys lookup`. La app no incluye un SDK nativo de Firebase que use la key de Android |
 
 Conclusión: no se trata de una credencial privilegiada filtrada. Sin embargo, la key está más
 abierta de lo necesario: aunque la app no la use para autenticar, quien la copie del repositorio
@@ -48,11 +48,21 @@ cualquier cliente.
 
 | Revisión | Responsable | Estado |
 | --- | --- | --- |
-| Restricciones actuales de la key | Josué Say | Hecho, ver la tabla anterior |
+| Restricciones de la key antes del cambio | Josué Say | Hecho, ver la tabla anterior |
 | El archivo corresponde al paquete Android configurado y no contiene una clave privada de cuenta de servicio | Mathew Cordero | Hecho el 13 de noviembre de 2026; también se confirmó que el archivo no tiene `private_key` |
 | Métricas de uso de la key (APIs y servicios > Credenciales > key > Métricas) desde el 21 de octubre | Mathew Cordero | Pendiente |
 | Usuarios de Firebase Authentication desconocidos | Mathew Cordero | Pendiente |
 | Cargos inesperados en facturación del proyecto | Mathew Cordero | Pendiente |
+
+## Evidencias
+
+![Alerta #1 de secret scanning con el valor oculto](secret-scanning-antes-alerta.png)
+
+*Figura 1. Alerta de secret scanning sobre `frontend/google-services.json:31`. En la captura se ocultó el valor de la key.*
+
+![Restricciones de la Android key en Google Cloud](firebase-key-antes-restricciones.png)
+
+*Figura 2. Android key antes de la corrección: restricción de aplicaciones «Ninguno» y aviso de Google Cloud recomendando restringirla.*
 
 ## Decisión
 
@@ -64,7 +74,7 @@ contraseña, y el build de CI la necesita. El control efectivo es restringir la 
 
 | Prioridad | Medida | Detalle |
 | :---: | --- | --- |
-| 1 | Restringir la key | Restricción de aplicación Android con el paquete `com.aina.news` y el SHA-1 del certificado de EAS. Limitar las APIs a las que la app realmente necesita en Android, en lugar de las 27 actuales. Es el control efectivo, porque la key seguirá dentro del APK. |
+| 1 | Restringir la key | Aplicado el 13 de noviembre de 2026; ver «Registro del cambio». |
 | 2 | Cerrar la alerta #1 | Tras restringir la key, cerrar la alerta de secret scanning como «se usa en configuración pública» con la justificación de este documento. |
 | 3 | Rotar la key | Solo si las métricas muestran uso ajeno: crear una key nueva restringida, regenerar `google-services.json` y eliminar la anterior. Sigue en el historial público (`27f8cec`). |
 
@@ -72,3 +82,23 @@ Alternativa considerada y descartada por ahora: quitar el archivo del repositori
 `git rm --cached` y `.gitignore`, y entregarlo al CI como secreto del entorno `production` antes de
 `deploy/expo/build-ci.sh`. No elimina el riesgo, porque la key ya está en el historial público y
 dentro del APK, y además agrega un paso manual para cada build local.
+
+## Registro del cambio
+
+Cambio normal según la práctica de habilitación de cambios de ITIL: lo solicitó el hallazgo, se
+evaluó el riesgo, se preparó la reversa y lo autorizó el responsable del servicio antes de aplicarlo.
+
+| Campo | Detalle |
+| --- | --- |
+| Solicitud | Restringir la Android key de Firebase detectada por secret scanning (alerta #1) |
+| Evaluación de riesgo | Bajo. La app web usa la Browser key, la app no tiene SDK nativo de Firebase y Google Sign-In usa el client ID de OAuth, no la API key |
+| Plan de reversa | Respaldo de las restricciones anteriores (27 APIs, sin restricción de aplicación) tomado con `gcloud services api-keys describe` antes del cambio; se restauran con `gcloud services api-keys update` |
+| Autorización | Mathew Cordero, responsable de Firebase y del proyecto de Google Cloud, 13 de noviembre de 2026 |
+| Implementación | Josué Say, 13 de noviembre de 2026, con `gcloud services api-keys update`: aplicación Android `com.aina.news` + SHA-1 del certificado de firma (tomado de `google-services.json`), y APIs limitadas a `identitytoolkit`, `securetoken` y `firebaseinstallations` |
+| Verificación | `gcloud services api-keys describe` muestra 1 aplicación Android permitida y 3 APIs. Pendiente: probar el inicio de sesión con Google en el APK |
+| Cierre | Cerrar la alerta #1 de secret scanning con la justificación de este documento |
+
+| Control | Antes | Después |
+| --- | --- | --- |
+| Restricción de aplicación | Ninguna | Android: `com.aina.news` + SHA-1 |
+| APIs permitidas | 27 | 3 |

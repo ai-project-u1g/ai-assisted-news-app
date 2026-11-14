@@ -26,6 +26,21 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: [version-update:semver-major]
+      # Versiones fijadas por el SDK de Expo: se actualizan con `npx expo install --fix`.
+      # Dependabot propuso react-native 0.88 y el typecheck del CI lo rechazó (PR #39).
+      - dependency-name: "expo"
+      - dependency-name: "expo-*"
+      - dependency-name: "babel-preset-expo"
+      - dependency-name: "react"
+      - dependency-name: "react-dom"
+      - dependency-name: "react-native"
+      - dependency-name: "react-native-web"
+      - dependency-name: "react-native-svg"
+      - dependency-name: "react-native-safe-area-context"
+      - dependency-name: "@react-native-async-storage/async-storage"
+      - dependency-name: "@types/react"
+      - dependency-name: "@types/react-dom"
+      - dependency-name: "typescript"
 
   # Las imágenes base solo reciben parches; cambiar de Python 3.13 o Node 24 es una
   # decisión del equipo.
@@ -44,3 +59,7 @@ updates:
     groups:
       actions:
         patterns: ["*"]
+    # Un salto mayor de una acción de deploy solo se prueba en main; se planifica aparte.
+    ignore:
+      - dependency-name: "*"
+        update-types: [version-update:semver-major]
