@@ -30,6 +30,8 @@ externas. Los controles nuevos están en `.github/workflows/security.yml`, separ
 | Build | Escaneo de imágenes | Trivy image sobre `news-api` y `news-chatbot`, construidas como en `deploy/gcp/deploy.sh` | Vulnerabilidades del sistema operativo y de Python en lo que se despliega |
 | Pruebas | DAST | OWASP ZAP (`zap-api-scan`) contra la API levantada en una red Docker interna con MongoDB efímera | Fallas visibles solo con la app corriendo |
 | Despliegue | Credenciales | Workload Identity Federation, Secret Manager, una cuenta de servicio por servicio | Llaves de larga duración en GitHub |
+| Cadena de suministro | Versiones fijas | Acciones de `security.yml` fijadas por SHA e imágenes de las herramientas con versión fija (Trivy, gitleaks, ZAP), actualizadas por Dependabot | Una etiqueta movida o una versión nueva que cambie resultados sin aviso |
+| Gobierno | Política de seguridad | `SECURITY.md` con el reporte privado de vulnerabilidades de GitHub, plazos y alcance | Reportes públicos de vulnerabilidades sin corregir |
 
 Criterio de corte: Trivy falla con hallazgos altos o críticos que ya tienen corrección publicada, y
 ZAP falla con alertas de riesgo alto. Los reportes se suben a la pestaña Security (SARIF) y el de
@@ -163,27 +165,31 @@ Security; un hallazgo alto con corrección bloquea el pipeline hasta resolverlo.
 
 *Figura 10. PR #45: excepción de gitleaks por patrón; el job de secretos vuelve a verde en todas las ramas.*
 
+![Checks del PR #48 en verde](evidencias/pipeline-despues-checks-pr48.png)
+
+*Figura 11. PR #48: las 9 actualizaciones de Python de Dependabot integradas en un solo cambio, con todos los controles en verde.*
+
 ![Resumen del reporte de ZAP](evidencias/dast/zap-reporte-resumen.png)
 
-*Figura 11. Reporte de ZAP: 0 alertas altas, medias y bajas. Reporte completo en [HTML](evidencias/dast/zap-report.html) y [PDF](evidencias/dast/zap-reporte.pdf).*
+*Figura 12. Reporte de ZAP: 0 alertas altas, medias y bajas. Reporte completo en [HTML](evidencias/dast/zap-report.html) y [PDF](evidencias/dast/zap-reporte.pdf).*
 
 ### Estado final
 
 ![Alertas de Dependabot después](evidencias/dependabot-despues-alertas.png)
 
-*Figura 12. Dependabot con 77 alertas cerradas por las correcciones.*
+*Figura 13. Dependabot con 77 alertas cerradas por las correcciones.*
 
 ![Alerta de minimatch descartada](evidencias/dependabot-descartada-minimatch.png)
 
-*Figura 13. `minimatch` descartada como riesgo tolerable, con justificación.*
+*Figura 14. `minimatch` descartada como riesgo tolerable, con justificación.*
 
 ![Alerta de uuid descartada](evidencias/dependabot-descartada-uuid.png)
 
-*Figura 14. `uuid` descartada como código vulnerable no usado, con justificación.*
+*Figura 15. `uuid` descartada como código vulnerable no usado, con justificación.*
 
 ![Secret scanning sin alertas abiertas](evidencias/secret-scanning-despues-sin-abiertas.png)
 
-*Figura 15. Secret scanning sin alertas abiertas.*
+*Figura 16. Secret scanning sin alertas abiertas.*
 
 Las evidencias de la API key (restricción, login en web y Android) están en el
 [documento del hallazgo](evidencias/hallazgo-firebase-api-key.md).
@@ -192,10 +198,11 @@ Las evidencias de la API key (restricción, login en web y Android) están en el
 
 | Prioridad | Mejora | Cómo |
 | :---: | --- | --- |
-| 1 | Proteger `main` | Ruleset con pull request obligatorio, una aprobación y los checks de `security` en verde, más bloqueo de force push y borrado. Se aplica al cerrar la entrega: mientras el equipo completa el plan, integra documentación directo a `main` y el ruleset lo bloquearía |
-| 2 | Desactivar `/docs` y `/openapi.json` en producción | Lo exige el ADR 0001 y hoy responden 200 en Cloud Run. `docs_url=None` y `openapi_url=None` fuera del entorno local |
-| 3 | Restringir la Browser key de Firebase | Limitarla a los dominios de Firebase Hosting (referrers HTTP) |
-| 4 | Fijar dependencias de Python | Lockfile con hashes (`pip-compile --generate-hashes`) para builds reproducibles |
-| 5 | Monitoreo de seguridad en ejecución (DevSecMonOps) | Alertas de Cloud Monitoring por picos de 401/429 y de costo en la API del chat; rate limit en `/chat` |
-| 6 | Cadena de suministro | SBOM y firma de imágenes en Artifact Registry (Trivy SBOM + cosign) |
-| 7 | Migrar de SDK de Expo | Cierra `minimatch` y `uuid`, hoy aceptadas como riesgo |
+| 1 | Proteger `main` | Ruleset con pull request obligatorio, una aprobación y los checks de `security` en verde, más bloqueo de force push y borrado, y `CODEOWNERS` para exigir revisión en `.github/`, `deploy/` y la configuración de seguridad. Se aplica al cerrar la entrega: mientras el equipo completa el plan, integra documentación directo a `main` y el ruleset lo bloquearía |
+| 2 | Que el deploy espere a `security` | Hoy `deploy.yml` despliega en cada push a `main` aunque `security` falle. Con el ruleset ya no entra código sin checks; además, el job de deploy puede depender del resultado de `security` (`workflow_run`) |
+| 3 | Desactivar `/docs` y `/openapi.json` en producción | Lo exige el ADR 0001 y hoy responden 200 en Cloud Run. `docs_url=None` y `openapi_url=None` fuera del entorno local |
+| 4 | Restringir la Browser key de Firebase | Limitarla a los dominios de Firebase Hosting (referrers HTTP) |
+| 5 | Fijar dependencias de Python | Lockfile con hashes (`pip-compile --generate-hashes`) para builds reproducibles |
+| 6 | Monitoreo de seguridad en ejecución (DevSecMonOps) | Alertas de Cloud Monitoring por picos de 401/429 y de costo en la API del chat; rate limit en `/chat` |
+| 7 | Cadena de suministro | SBOM y firma de imágenes en Artifact Registry (Trivy SBOM + cosign) |
+| 8 | Migrar de SDK de Expo | Cierra `minimatch` y `uuid`, hoy aceptadas como riesgo |
