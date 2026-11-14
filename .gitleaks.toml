@@ -1,0 +1,10 @@
+# Configuración de gitleaks (docs/deploy/plan-itil-devops/06-seguridad/).
+# Reglas por defecto más una excepción por patrón, que sigue valiendo tras un squash merge
+# (las huellas de .gitleaksignore incluyen el SHA del commit y cambian al integrar).
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Nombre temporal del contenedor de la API en reportes DAST de ZAP (news-dast-api-<hex>:8020)"
+regexTarget = "match"
+regexes = ['''news-dast-api-[0-9a-f]{12}''']

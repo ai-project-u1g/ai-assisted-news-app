@@ -23,7 +23,7 @@ externas. Los controles nuevos están en `.github/workflows/security.yml`, separ
 | Etapa | Control | Herramienta | Qué detiene |
 | --- | --- | --- | --- |
 | Código | SAST | CodeQL (Python y TypeScript, consultas `security-extended`) | Patrones de código inseguro |
-| Código | Secretos en el historial | gitleaks (contenedor, todas las ramas, salida redactada) | Credenciales commiteadas |
+| Código | Secretos en el historial | gitleaks (contenedor, todas las ramas, salida redactada; excepciones justificadas en `.gitleaks.toml` y `.gitleaksignore`) | Credenciales commiteadas |
 | Código | Secretos al hacer push | GitHub secret scanning + push protection | Bloquea el push antes de que el secreto entre |
 | Dependencias | SCA | Trivy fs, pip-audit, Dependabot alerts | Paquetes con CVE conocidas |
 | Dependencias | Actualización | Dependabot security y version updates (agrupadas, sin saltos mayores) | Deriva de versiones |
@@ -97,7 +97,7 @@ Del 13 de noviembre de 2026, antes y después de los PR
 | Android key de Firebase sin restricciones | Restringida a la app y a 3 APIs, como cambio autorizado. Ver [hallazgo](evidencias/hallazgo-firebase-api-key.md) | #40 |
 | Dependabot propuso React Native 0.88, incompatible con el SDK 57 | El typecheck del CI rechazó el PR #39; se excluyeron los paquetes fijados por Expo | #40 |
 | ZAP: falta `X-Content-Type-Options` | La API envía `nosniff` en todas las respuestas, con prueba | #43 |
-| gitleaks marcó el nombre temporal del contenedor en el reporte de ZAP | Alias fijo `news-api` en el script y huellas justificadas en `.gitleaksignore` | #44 |
+| gitleaks marcó el nombre temporal del contenedor en el reporte de ZAP | Alias fijo `news-api` en el script y excepción por patrón en `.gitleaks.toml`. Primero se usaron huellas en `.gitleaksignore`, pero incluyen el SHA del commit y dejaron de coincidir tras el squash merge | #44, #45 |
 | `minimatch` y `uuid` sin versión compatible con Expo 57 | Descartadas en Dependabot: riesgo tolerable (patrones propios en build) y código no usado (`uuid.v4()` sin `buf`) | - |
 
 **Responsable y fecha:** Josué Say · 13 de noviembre de 2026. La restricción de la API key la
