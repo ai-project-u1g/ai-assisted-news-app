@@ -80,7 +80,7 @@ jobs:
         with:
           sarif_file: trivy-fs.sarif
           category: trivy-fs
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         if: ${{ !cancelled() }}
         with:
           python-version: "3.13"
