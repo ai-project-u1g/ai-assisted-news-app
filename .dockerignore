@@ -7,8 +7,6 @@ frontend/.expo/
 frontend/dist/
 frontend/web-build/
 
-Referncias/node_modules/
-
 **/__pycache__/
 **/.pytest_cache/
 *.pyc

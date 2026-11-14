@@ -67,11 +67,10 @@ jobs:
       security-events: write
     steps:
       - uses: actions/checkout@v4
-      # Referncias/ es código de consulta que no se despliega.
       - name: Trivy fs
         run: >
           docker run --rm -v "$PWD:/src" -w /src "$TRIVY_IMAGE"
-          fs --scanners vuln,misconfig,secret --skip-dirs Referncias
+          fs --scanners vuln,misconfig,secret
           --format sarif --output trivy-fs.sarif
           --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 .
       - name: Subir reporte a la pestaña Security
